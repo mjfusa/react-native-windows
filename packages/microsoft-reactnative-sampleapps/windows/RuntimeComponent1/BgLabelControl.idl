@@ -1,0 +1,10 @@
+namespace RuntimeComponent1
+{
+    [default_interface]
+    runtimeclass BgLabelControl : Windows.UI.Xaml.Controls.Control
+    {
+        BgLabelControl();
+        static Windows.UI.Xaml.DependencyProperty LabelProperty{ get; };
+        String Label;
+    }
+}

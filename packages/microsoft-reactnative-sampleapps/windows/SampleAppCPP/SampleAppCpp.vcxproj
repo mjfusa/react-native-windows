@@ -102,7 +102,7 @@
     <Import Project="PropertySheet.props" />
   </ImportGroup>
   <ImportGroup Label="ReactNativeWindowsPropertySheets">
-    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\external\Microsoft.ReactNative.Uwp.CppApp.props"/>
+    <Import Project="$(ReactNativeWindowsDir)\PropertySheets\external\Microsoft.ReactNative.Uwp.CppApp.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup>
@@ -134,6 +134,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DebugConsole.h" />
+    <ClInclude Include="headers\DeviceInfo2.0.h" />
+    <ClInclude Include="headers\DeviceInfo2.1.h" />
+    <ClInclude Include="headers\DeviceInfo2.2.h" />
+    <ClInclude Include="headers\DeviceInfo2.h" />
+    <ClInclude Include="headers\NativeUICtrl.0.h" />
+    <ClInclude Include="headers\NativeUICtrl.1.h" />
+    <ClInclude Include="headers\NativeUICtrl.2.h" />
+    <ClInclude Include="headers\NativeUICtrl.h" />
     <ClInclude Include="MainPage.h">
       <DependentUpon>MainPage.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -189,6 +197,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="PropertySheet.props" />
+    <Text Include="Bundle.Mapping.txt">
+      <DeploymentContent>false</DeploymentContent>
+    </Text>
     <Text Include="readme.txt">
       <DeploymentContent>false</DeploymentContent>
     </Text>
@@ -197,11 +208,11 @@
     <Natvis Include="$(ReactNativeWindowsDir)\Folly\Folly.natvis" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NativeUICtrl\NativeUICtrl.vcxproj">
+      <Project>{2ec573f2-3107-4b86-8a88-6534ff7e5b40}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\SampleLibraryCpp\SampleLibraryCpp.vcxproj">
       <Project>{47eec7f3-40d3-49ba-82c1-eaf103b54215}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SampleLibraryCS\SampleLibraryCS.csproj">
-      <Project>{c0a6bd9c-3ee5-4b12-8ce4-cee95178539c}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -214,7 +225,7 @@
     <Import Project="..\packages\Microsoft.UI.Xaml.2.3.191129002\build\native\Microsoft.UI.Xaml.targets" Condition="Exists('..\packages\Microsoft.UI.Xaml.2.3.191129002\build\native\Microsoft.UI.Xaml.targets')" />
     <Import Project="..\packages\Microsoft.Windows.CppWinRT.2.0.200316.3\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.2.0.200316.3\build\native\Microsoft.Windows.CppWinRT.targets')" />
   </ImportGroup>
-  <Import Project="$(ReactNativeWindowsDir)\PropertySheets\external\Microsoft.ReactNative.Uwp.CppApp.targets"/>
+  <Import Project="$(ReactNativeWindowsDir)\PropertySheets\external\Microsoft.ReactNative.Uwp.CppApp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>

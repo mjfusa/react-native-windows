@@ -22,8 +22,8 @@
 
 #include <winrt/SampleLibraryCpp.h>
 
-#include <winrt/SampleLibraryCS.SampleLibraryCS_XamlTypeInfo.h>
-#include <winrt/SampleLibraryCS.h>
+//#include <winrt/SampleLibraryCS.SampleLibraryCS_XamlTypeInfo.h>
+//#include <winrt/SampleLibraryCS.h>
 
 #include <winrt/Microsoft.UI.Xaml.Automation.Peers.h>
 #include <winrt/Microsoft.UI.Xaml.Controls.Primitives.h>

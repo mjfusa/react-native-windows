@@ -22,14 +22,18 @@ import {MyComp} from './myComp';
 
 import {default as MyModule} from './NativeMyModule';
 
+import {DeviceInfoComponent} from './myDeviceInfo';
+
+import {ViewManagerSample} from './View2';
+
 // Creating event emitters
-const SampleModuleCSEmitter = new NativeEventEmitter(NativeModules.SampleModuleCS);
+// const SampleModuleCSEmitter = new NativeEventEmitter(NativeModules.SampleModuleCS);
 const SampleModuleCppEmitter = new NativeEventEmitter(NativeModules.SampleModuleCpp);
 
-const CustomUserControlCS = requireNativeComponent('CustomUserControlCS');
+// const CustomUserControlCS = requireNativeComponent('CustomUserControlCS');
 const CustomUserControlCpp = requireNativeComponent('CustomUserControlCpp');
 
-const CircleCS = requireNativeComponent('CircleCS');
+// const CircleCS = requireNativeComponent('CircleCS');
 const CircleCpp = requireNativeComponent('CircleCpp');
 
 var log = function(result) {
@@ -61,7 +65,7 @@ global.__fbBatchedBridge.registerLazyCallableModule('SampleModuleCpp', () => new
 
 class SampleApp extends Component {
   componentDidMount() {
-    this.timedEventCSSub = SampleModuleCSEmitter.addListener('TimedEventCS', getCallback('SampleModuleCS.TimedEventCS() => '));
+    // this.timedEventCSSub = SampleModuleCSEmitter.addListener('TimedEventCS', getCallback('SampleModuleCS.TimedEventCS() => '));
     this.timedEventCppSub = SampleModuleCppEmitter.addListener('TimedEventCpp', getCallback('SampleModuleCpp.TimedEventCpp() => '));
     this.openURLSub = Linking.addListener('url', (event) => log('Open URL => ' + event.url));
 
@@ -71,87 +75,87 @@ class SampleApp extends Component {
   }
 
   componentWillUnmount() {
-    this.timedEventCSSub.remove();
+    // this.timedEventCSSub.remove();
     this.timedEventCppSub.remove();
     this.openURLSub.remove();
   }
 
   onPressSampleModuleCS() {
-    log('SampleApp.onPressSampleModuleCS()');
+    // log('SampleApp.onPressSampleModuleCS()');
 
     var numberArg = 42;
 
     // SampleModuleCS constants
 
-    log(`SampleModuleCS.NumberConstant: ${NativeModules.SampleModuleCS.NumberConstant}`);
-    log(`SampleModuleCS.StringConstant: ${NativeModules.SampleModuleCS.StringConstant}`);
+    // log(`SampleModuleCS.NumberConstant: ${NativeModules.SampleModuleCS.NumberConstant}`);
+    // log(`SampleModuleCS.StringConstant: ${NativeModules.SampleModuleCS.StringConstant}`);
 
-    log(`SampleModuleCS.NumberConstantViaProvider: ${NativeModules.SampleModuleCS.NumberConstantViaProvider}`);
-    log(`SampleModuleCS.StringConstantViaProvider: ${NativeModules.SampleModuleCS.StringConstantViaProvider}`);
+    // log(`SampleModuleCS.NumberConstantViaProvider: ${NativeModules.SampleModuleCS.NumberConstantViaProvider}`);
+    // log(`SampleModuleCS.StringConstantViaProvider: ${NativeModules.SampleModuleCS.StringConstantViaProvider}`);
 
     // SampleModuleCS method calls
 
-    NativeModules.SampleModuleCS.VoidMethod();
+  //   NativeModules.SampleModuleCS.VoidMethod();
 
-    NativeModules.SampleModuleCS.VoidMethodWithArgs(numberArg);
+  //   NativeModules.SampleModuleCS.VoidMethodWithArgs(numberArg);
 
-    NativeModules.SampleModuleCS.ReturnMethod(getCallback('SampleModuleCS.ReturnMethod => '));
+  //   NativeModules.SampleModuleCS.ReturnMethod(getCallback('SampleModuleCS.ReturnMethod => '));
 
-    NativeModules.SampleModuleCS.ReturnMethodWithArgs(numberArg, getCallback('SampleModuleCS.ReturnMethodWithArgs => '));
+  //   NativeModules.SampleModuleCS.ReturnMethodWithArgs(numberArg, getCallback('SampleModuleCS.ReturnMethodWithArgs => '));
 
-    NativeModules.SampleModuleCS.ExplicitCallbackMethod(getCallback('SampleModuleCS.ExplicitCallbackMethod => '));
+  //   NativeModules.SampleModuleCS.ExplicitCallbackMethod(getCallback('SampleModuleCS.ExplicitCallbackMethod => '));
 
-    NativeModules.SampleModuleCS.ExplicitCallbackMethodWithArgs(numberArg, getCallback('SampleModuleCS.ExplicitCallbackMethodWithArgs => '));
+  //   NativeModules.SampleModuleCS.ExplicitCallbackMethodWithArgs(numberArg, getCallback('SampleModuleCS.ExplicitCallbackMethodWithArgs => '));
 
-    NativeModules.SampleModuleCS.TwoCallbacksMethod(/*shouldSucceed:*/true,
-      getCallback('SampleModuleCS.TwoCallbacksMethod success => '),
-      getCallback('SampleModuleCS.TwoCallbacksMethod fail => '));
+  //   NativeModules.SampleModuleCS.TwoCallbacksMethod(/*shouldSucceed:*/true,
+  //     getCallback('SampleModuleCS.TwoCallbacksMethod success => '),
+  //     getCallback('SampleModuleCS.TwoCallbacksMethod fail => '));
 
-    NativeModules.SampleModuleCS.TwoCallbacksMethod(/*shouldSucceed:*/false,
-      getCallback('SampleModuleCS.TwoCallbacksMethod success => '),
-      getCallback('SampleModuleCS.TwoCallbacksMethod fail => '));
+  //   NativeModules.SampleModuleCS.TwoCallbacksMethod(/*shouldSucceed:*/false,
+  //     getCallback('SampleModuleCS.TwoCallbacksMethod success => '),
+  //     getCallback('SampleModuleCS.TwoCallbacksMethod fail => '));
 
-    NativeModules.SampleModuleCS.TwoCallbacksAsyncMethod(/*shouldSucceed:*/true,
-      getCallback('SampleModuleCS.TwoCallbacksAsyncMethod success => '),
-      getCallback('SampleModuleCS.TwoCallbacksAsyncMethod fail => '));
+  //   NativeModules.SampleModuleCS.TwoCallbacksAsyncMethod(/*shouldSucceed:*/true,
+  //     getCallback('SampleModuleCS.TwoCallbacksAsyncMethod success => '),
+  //     getCallback('SampleModuleCS.TwoCallbacksAsyncMethod fail => '));
 
-    NativeModules.SampleModuleCS.TwoCallbacksAsyncMethod(/*shouldSucceed:*/false,
-      getCallback('SampleModuleCS.TwoCallbacksAsyncMethod success => '),
-      getCallback('SampleModuleCS.TwoCallbacksAsyncMethod fail => '));
+  //   NativeModules.SampleModuleCS.TwoCallbacksAsyncMethod(/*shouldSucceed:*/false,
+  //     getCallback('SampleModuleCS.TwoCallbacksAsyncMethod success => '),
+  //     getCallback('SampleModuleCS.TwoCallbacksAsyncMethod fail => '));
 
-    NativeModules.SampleModuleCS.ReverseTwoCallbacksMethod(/*shouldSucceed:*/true,
-      getCallback('SampleModuleCS.ReverseTwoCallbacksMethod fail => '),
-      getCallback('SampleModuleCS.ReverseTwoCallbacksMethod success => '));
+  //   NativeModules.SampleModuleCS.ReverseTwoCallbacksMethod(/*shouldSucceed:*/true,
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksMethod fail => '),
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksMethod success => '));
 
-    NativeModules.SampleModuleCS.ReverseTwoCallbacksMethod(/*shouldSucceed:*/false,
-      getCallback('SampleModuleCS.ReverseTwoCallbacksMethod fail => '),
-      getCallback('SampleModuleCS.ReverseTwoCallbacksMethod success => '));
+  //   NativeModules.SampleModuleCS.ReverseTwoCallbacksMethod(/*shouldSucceed:*/false,
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksMethod fail => '),
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksMethod success => '));
 
-    NativeModules.SampleModuleCS.ReverseTwoCallbacksAsyncMethod(/*shouldSucceed:*/true,
-      getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod fail => '),
-      getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod success => '));
+  //   NativeModules.SampleModuleCS.ReverseTwoCallbacksAsyncMethod(/*shouldSucceed:*/true,
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod fail => '),
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod success => '));
 
-    NativeModules.SampleModuleCS.ReverseTwoCallbacksAsyncMethod(/*shouldSucceed:*/false,
-      getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod fail => '),
-      getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod success => '));
+  //   NativeModules.SampleModuleCS.ReverseTwoCallbacksAsyncMethod(/*shouldSucceed:*/false,
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod fail => '),
+  //     getCallback('SampleModuleCS.ReverseTwoCallbacksAsyncMethod success => '));
 
-    var promise1 = NativeModules.SampleModuleCS.ExplicitPromiseMethod();
-    promise1.then(getCallback('SampleModuleCS.ExplicitPromiseMethod then => ')).catch(getErrorCallback('SampleModuleCS.ExplicitPromiseMethod catch => '));
+  //   var promise1 = NativeModules.SampleModuleCS.ExplicitPromiseMethod();
+  //   promise1.then(getCallback('SampleModuleCS.ExplicitPromiseMethod then => ')).catch(getErrorCallback('SampleModuleCS.ExplicitPromiseMethod catch => '));
 
-    var promise2 = NativeModules.SampleModuleCS.ExplicitPromiseMethodWithArgs(numberArg);
-    promise2.then(getCallback('SampleModuleCS.ExplicitPromiseMethodWithArgs then => ')).catch(getErrorCallback('SampleModuleCS.ExplicitPromiseMethodWithArgs catch => '));
+  //   var promise2 = NativeModules.SampleModuleCS.ExplicitPromiseMethodWithArgs(numberArg);
+  //   promise2.then(getCallback('SampleModuleCS.ExplicitPromiseMethodWithArgs then => ')).catch(getErrorCallback('SampleModuleCS.ExplicitPromiseMethodWithArgs catch => '));
 
-    var promise3 = NativeModules.SampleModuleCS.NegateAsyncPromise(5);
-    promise3.then(getCallback('SampleModuleCS.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCS.NegateAsyncPromise catch => '));
+  //   var promise3 = NativeModules.SampleModuleCS.NegateAsyncPromise(5);
+  //   promise3.then(getCallback('SampleModuleCS.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCS.NegateAsyncPromise catch => '));
 
-    var promise4 = NativeModules.SampleModuleCS.NegateAsyncPromise(-5);
-    promise4.then(getCallback('SampleModuleCS.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCS.NegateAsyncPromise catch => '));
+  //   var promise4 = NativeModules.SampleModuleCS.NegateAsyncPromise(-5);
+  //   promise4.then(getCallback('SampleModuleCS.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCS.NegateAsyncPromise catch => '));
 
-    NativeModules.SampleModuleCS.callDistanceFunction({x: 22, y: 23}, {x: 55, y: 65});
+  //   NativeModules.SampleModuleCS.callDistanceFunction({x: 22, y: 23}, {x: 55, y: 65});
 
-    log('SampleModuleCS.SyncReturnMethod => ' + NativeModules.SampleModuleCS.SyncReturnMethod());
+  //   log('SampleModuleCS.SyncReturnMethod => ' + NativeModules.SampleModuleCS.SyncReturnMethod());
 
-    log('SampleModuleCS.SyncReturnMethodWithArgs => ' + NativeModules.SampleModuleCS.SyncReturnMethodWithArgs(numberArg));
+  //   log('SampleModuleCS.SyncReturnMethodWithArgs => ' + NativeModules.SampleModuleCS.SyncReturnMethodWithArgs(numberArg));
   }
 
   onPressSampleModuleCpp() {
@@ -220,7 +224,7 @@ class SampleApp extends Component {
     promise2.then(getCallback('SampleModuleCpp.ExplicitPromiseMethodWithArgs then => ')).catch(getErrorCallback('SampleModuleCpp.ExplicitPromiseMethodWithArgs catch => '));
 
     var promise3 = NativeModules.SampleModuleCpp.NegateAsyncPromise(5);
-    promise3.then(getCallback('SampleModuleCpp.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCpp.NegateAsyncPromise catch => '));
+     promise3.then(getCallback('SampleModuleCpp.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCpp.NegateAsyncPromise catch => '));
 
     var promise4 = NativeModules.SampleModuleCpp.NegateAsyncPromise(-5);
     promise4.then(getCallback('SampleModuleCpp.NegateAsyncPromise then => ')).catch(getErrorCallback('SampleModuleCpp.NegateAsyncPromise catch => '));
@@ -232,18 +236,18 @@ class SampleApp extends Component {
     log('SampleModuleCpp.SyncReturnMethodWithArgs => ' + NativeModules.SampleModuleCpp.SyncReturnMethodWithArgs(numberArg));
   }
 
-  onPressCustomUserControlCS() {
-    log('SampleApp.onPressCustomUserControlCS()');
+  // onPressCustomUserControlCS() {
+  //   log('SampleApp.onPressCustomUserControlCS()');
 
-    var strArg = 'Hello World!';
+  //   var strArg = 'Hello World!';
 
-    if (this._CustomUserControlCSRef)
-    {
-      const tag = findNodeHandle(this._CustomUserControlCSRef);
-      log(`UIManager.dispatchViewManagerCommand(${tag}, CustomUserControlCS.CustomCommand, "${strArg}")`);
-      UIManager.dispatchViewManagerCommand(tag, UIManager.getViewManagerConfig('CustomUserControlCS').Commands.CustomCommand, strArg);
-    }
-  }
+  //   if (this._CustomUserControlCSRef)
+  //   {
+  //     const tag = findNodeHandle(this._CustomUserControlCSRef);
+  //     log(`UIManager.dispatchViewManagerCommand(${tag}, CustomUserControlCS.CustomCommand, "${strArg}")`);
+  //     UIManager.dispatchViewManagerCommand(tag, UIManager.getViewManagerConfig('CustomUserControlCS').Commands.CustomCommand, strArg);
+  //   }
+  // }
 
   onPressCustomUserControlCpp() {
     log('SampleApp.onPressCustomUserControlCpp()');
@@ -258,10 +262,10 @@ class SampleApp extends Component {
     }
   }
 
-  onLabelChangedCustomUserControlCS(evt) {
-    var label = evt.nativeEvent;
-    log(`SampleApp.onLabelChangedCustomUserControlCS("${label}")`);
-  }
+  // onLabelChangedCustomUserControlCS(evt) {
+  //   var label = evt.nativeEvent;
+  //   log(`SampleApp.onLabelChangedCustomUserControlCS("${label}")`);
+  // }
 
   onLabelChangedCustomUserControlCpp(evt) {
     var label = evt.nativeEvent;
@@ -271,7 +275,6 @@ class SampleApp extends Component {
   render() {
     return (
       <View style={styles.container}>
-
         <MyComp/>
         <Text style={styles.welcome}>
           SampleApp
@@ -282,20 +285,20 @@ class SampleApp extends Component {
 
         <Button onPress={() => { MyModule.voidFunc(); }} title="Call MyModule tests"/>
 
-        <Button onPress={() => { this.onPressSampleModuleCS(); }} title="Call SampleModuleCS!" disabled={NativeModules.SampleModuleCS == null} />
+        {/* <Button onPress={() => { this.onPressSampleModuleCS(); }} title="Call SampleModuleCS!" disabled={NativeModules.SampleModuleCS == null} /> */}
         <Button onPress={() => { this.onPressSampleModuleCpp(); }} title="Call SampleModuleCpp!" disabled={NativeModules.SampleModuleCpp == null} />
 
-        <CustomUserControlCS style={styles.customcontrol} label="CustomUserControlCS!" ref={(ref) => { this._CustomUserControlCSRef = ref; }} onLabelChanged={(evt) => { this.onLabelChangedCustomUserControlCS(evt); }} />
-        <Button onPress={() => { this.onPressCustomUserControlCS(); }} title="Call CustomUserControlCS Commands!" />
+        {/* <CustomUserControlCS style={styles.customcontrol} label="CustomUserControlCS!" ref={(ref) => { this._CustomUserControlCSRef = ref; }} onLabelChanged={(evt) => { this.onLabelChangedCustomUserControlCS(evt); }} />
+        <Button onPress={() => { this.onPressCustomUserControlCS(); }} title="Call CustomUserControlCS Commands!" /> */}
 
         <CustomUserControlCpp style={styles.customcontrol} label="CustomUserControlCpp!" ref={(ref) => { this._CustomUserControlCppRef = ref; }} onLabelChanged={(evt) => { this.onLabelChangedCustomUserControlCpp(evt); }} />
         <Button onPress={() => { this.onPressCustomUserControlCpp(); }} title="Call CustomUserControlCpp Commands!" />
 
-        <CircleCS style={styles.circle}>
+        {/* <CircleCS style={styles.circle}>
           <View style={styles.box}>
             <Text style={styles.boxText}>CircleCS!</Text>
           </View>
-        </CircleCS>
+        </CircleCS> */}
 
         <CircleCpp style={styles.circle}>
           <View style={styles.box}>
@@ -305,6 +308,8 @@ class SampleApp extends Component {
         <Text style={styles.instructions}>
           Hello from Microsoft!
         </Text>
+        <ViewManagerSample/>
+        {/* <DeviceInfoComponent /> */}
       </View>
     );
   }
