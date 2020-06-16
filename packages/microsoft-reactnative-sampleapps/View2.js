@@ -9,7 +9,7 @@ import {
   Text
 } from 'react-native';
 
-let CustomUserControl = requireNativeComponent('BgLabelControl');
+let CustomUserControl = requireNativeComponent('MyUserControl');
 
 class ViewManagerSample extends React.Component {
   onPress() {
@@ -22,8 +22,8 @@ class ViewManagerSample extends React.Component {
   render() {
     return (
       <View>
-        <Text>text</Text>
-         <CustomUserControl  style={styles.customcontrol} label="test"/>
+        {/* <Text>text1</Text> */}
+         <CustomUserControl  style={styles.customcontrol} label="Hello from me!"/>
          {/* <CustomUserControl style={styles.customcontrol} label="CustomUserControl!" ref={(ref) => { this._customControlRef = ref; }} /> */}
 
          {/* <Button onPress={() => { this.onPress(); }} title="Call CustomUserControl Commands!" /> */}
@@ -39,10 +39,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   customcontrol: {
+    borderColor:'#000000',
+    borderWidth:3,
     color: '#333333',
-    backgroundColor: '#006666',
+    backgroundColor: '#FF0000',
     width: 200,
-    height: 20,
+    height: 200,
     margin: 10,
   },
 });

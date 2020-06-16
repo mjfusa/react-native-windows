@@ -4,15 +4,15 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:RuntimeComponent1">
 
-    <Style TargetType="local:BgLabelControl" >
-        <Setter Property="Template">
-            <Setter.Value>
+    <!--<Style TargetType="local:BgLabelControl" >-->
+        <!--<Setter Property="Template">
+            --><!--<Setter.Value>
                 <ControlTemplate TargetType="local:BgLabelControl">
                     <Grid Width="100" Height="100" Background="{TemplateBinding Background}">
                         <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Text="{TemplateBinding Label}"/>
                     </Grid>
                 </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
+            </Setter.Value>--><!--
+        </Setter>-->
+    <!--</Style>-->
 </ResourceDictionary>

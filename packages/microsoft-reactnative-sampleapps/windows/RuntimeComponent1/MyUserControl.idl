@@ -1,0 +1,15 @@
+namespace RuntimeComponent1
+{
+    [default_interface]
+    runtimeclass MyUserControl : Windows.UI.Xaml.Controls.Control
+    {
+        MyUserControl();
+        static Windows.UI.Xaml.DependencyProperty LabelProperty{ get; };
+        String Label;
+        static Windows.UI.Xaml.DependencyProperty BackgroundProperty {
+          get;
+        };
+
+    }
+
+}
