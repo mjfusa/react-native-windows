@@ -1,0 +1,1 @@
+powershell -f .\installOptionalPackage.ps1

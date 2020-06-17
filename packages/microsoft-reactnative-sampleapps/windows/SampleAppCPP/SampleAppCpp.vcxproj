@@ -15,7 +15,7 @@
     <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
     <WindowsTargetPlatformVersion>10.0.18362.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.16299.0</WindowsTargetPlatformMinVersion>
-    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <!-- Start Custom .NET Native properties -->
     <DotNetNativeVersion Condition="Exists('$(ProgramFiles)\Microsoft SDKs\UWPNuGetPackages\Microsoft.Net.Native.Compiler\2.2.7-rel-27913-00\build\Microsoft.Net.Native.Compiler.props')">2.2.7-rel-27913-00</DotNetNativeVersion>
     <DotNetNativeVersion Condition="Exists('$(ProgramFiles)\Microsoft SDKs\UWPNuGetPackages\Microsoft.Net.Native.Compiler\2.2.8-rel-28605-00\build\Microsoft.Net.Native.Compiler.props')">2.2.8-rel-28605-00</DotNetNativeVersion>
@@ -104,7 +104,15 @@
   <ImportGroup Label="ReactNativeWindowsPropertySheets">
     <Import Project="$(ReactNativeWindowsDir)\PropertySheets\external\Microsoft.ReactNative.Uwp.CppApp.props" />
   </ImportGroup>
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <PackageCertificateThumbprint>BF78848E08B0C56AA6DA06FD76A8F10145BA5A0A</PackageCertificateThumbprint>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Never</AppxBundle>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

@@ -1,0 +1,1 @@
+powershell -f .\uninstallOptionalPackage.ps1

@@ -22,7 +22,7 @@ import {MyComp} from './myComp';
 
 import {default as MyModule} from './NativeMyModule';
 
-import {DeviceInfoComponent} from './myDeviceInfo';
+import DeviceInfoComponent from './myDeviceInfo';
 
 import {ViewManagerSample} from './View2';
 
@@ -282,7 +282,9 @@ class SampleApp extends Component {
         <Text style={styles.instructions}>
           This app consumes custom Native Modules and View Managers.
         </Text>
-
+        <View>
+        <DeviceInfoComponent />
+        </View>
         <Button onPress={() => { MyModule.voidFunc(); }} title="Call MyModule tests"/>
 
         {/* <Button onPress={() => { this.onPressSampleModuleCS(); }} title="Call SampleModuleCS!" disabled={NativeModules.SampleModuleCS == null} /> */}
@@ -308,7 +310,7 @@ class SampleApp extends Component {
         <Text style={styles.instructions}>
           Hello from Microsoft!
         </Text>
-        <ViewManagerSample/>
+        {/* <ViewManagerSample/> */}
         {/* <DeviceInfoComponent /> */}
       </View>
     );
