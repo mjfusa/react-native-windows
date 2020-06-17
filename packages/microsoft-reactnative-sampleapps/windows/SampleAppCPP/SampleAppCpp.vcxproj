@@ -219,6 +219,9 @@
     <ProjectReference Include="..\NativeUICtrl\NativeUICtrl.vcxproj">
       <Project>{2ec573f2-3107-4b86-8a88-6534ff7e5b40}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\PackageInventory\PackageInventory.vcxproj">
+      <Project>{8e963bea-ed2a-495f-a95d-d9eacff70d7d}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\SampleLibraryCpp\SampleLibraryCpp.vcxproj">
       <Project>{47eec7f3-40d3-49ba-82c1-eaf103b54215}</Project>
     </ProjectReference>

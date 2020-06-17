@@ -10,6 +10,7 @@
 #include <winrt/SampleLibraryCpp.h>
 
 #include <winrt/NativeUICtrl.h>
+#include <winrt/PackageInventory.h>
 #include <headers/DeviceInfo2.h>
 
 using namespace winrt;
@@ -46,7 +47,8 @@ App::App() noexcept {
   ReactPropertyBag::Set(InstanceSettings().Properties(), ReactPropertyId<hstring>{L"Prop2"}, L"Hello World!");
 
   PackageProviders().Append(make<ReactPackageProvider>()); // Includes all modules in this project
-  PackageProviders().Append(winrt::SampleLibraryCpp::ReactPackageProvider());
+  PackageProviders().Append(winrt::PackageInventory::ReactPackageProvider());
+    PackageProviders().Append(winrt::SampleLibraryCpp::ReactPackageProvider());
   if (IsPackageInstalled(L"DeviceInfo2.dll"))
     PackageProviders().Append(winrt::DeviceInfo2::ReactPackageProvider());
   if (IsPackageInstalled(L"NativeUICtrl.dll")) 
