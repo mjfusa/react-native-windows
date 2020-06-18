@@ -1,5 +1,5 @@
 import { NativeModules } from 'react-native';
-import React, { Fragment } from 'react';
+import React from 'react';
 import {
     SafeAreaView,
     StyleSheet,
@@ -18,17 +18,15 @@ import {
     ReloadInstructions,
   } from 'react-native/Libraries/NewAppScreen';
   
-class PackagesInventory extends React.Component {
+class DeviceInfoComponent extends React.Component {
     constructor(props) {
       super(props);
-    this.state = {
-      modules: [
-        {module: "DeviceInfo2.dll", installed: false},
-        {module: "SampleLibraryCpp.dll", installed: false}
-    ]
+  
+      this.state = {
+        model: '',
+      }
     }
-  }
-    
+  
     getDeviceModel = (modulename) => {
         return new Promise((resolve, reject) => {
           var vm = NativeModules.OptionalPackages;
@@ -44,70 +42,23 @@ class PackagesInventory extends React.Component {
     }
     
 
-    // getModel = async () => {
-    //   var model = await this.getDeviceModel("a.dll");
-    //   this.setState( { model: model});
-    // }
+    getModel = async () => {
+      var model = await this.getDeviceModel("a.dll");
+      this.setState( { model: model});
+    }
   
     render() {
       return (
         <View style={styles.sectionContainer}>
-          {this.state.modules.map((item, key) =>
-          <Item item={item} key={key}/>
-          )}  
+         <StatusBar barStyle="dark-content" /> 
+     <View>
+             <Button title="Get model" onPress={this.getModel} /> 
+             <Text>{this.state.model}</Text>
+        </View>
         </View> 
       );
     }
-
-
-
-  }
-
-  
-  getDeviceModel = (modulename) => {
-    return new Promise((resolve, reject) => {
-      var vm = NativeModules.OptionalPackages;
-        vm.isPackageInstalled(modulename, function(result, error) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(result);
-            }
-        })
-    })
 }
-
-
-getModel = async (modulename) => {
-  var model = await this.getDeviceModel(modulename);
-  this.setState( { model: model});
-}
-
-function renderIf(modulename)  {
-  this.getDeviceModel(modulename).then(result => {
-  if (result) {
-      return <Text>Installed</Text>;
-  } else {
-      return <Text>Not installed</Text>;
-  }
-});
-
-}
-
-class Item extends React.Component {
-  render() {
-      return (
-          <View>
-            <Text>
-              {this.props.item.module} {renderIf((this.props.item.module))}
-              </Text>
-          </View>
-      );
-  }
-}
-
-
 
 const styles = StyleSheet.create({
     scrollView: {
@@ -149,5 +100,4 @@ const styles = StyleSheet.create({
   });
   
   
-  
-  export default PackagesInventory;
+export default DeviceInfoComponent;

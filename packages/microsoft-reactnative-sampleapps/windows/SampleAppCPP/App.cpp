@@ -48,11 +48,14 @@ App::App() noexcept {
 
   PackageProviders().Append(make<ReactPackageProvider>()); // Includes all modules in this project
   PackageProviders().Append(winrt::PackageInventory::ReactPackageProvider());
+
+  // Optional Native UI Modules
+  if (IsPackageInstalled(L"SampleLibraryCpp.dll"))
     PackageProviders().Append(winrt::SampleLibraryCpp::ReactPackageProvider());
   if (IsPackageInstalled(L"DeviceInfo2.dll"))
     PackageProviders().Append(winrt::DeviceInfo2::ReactPackageProvider());
-  if (IsPackageInstalled(L"NativeUICtrl.dll")) 
-    PackageProviders().Append(winrt::NativeUICtrl::ReactPackageProvider());
+  //if (IsPackageInstalled(L"NativeUICtrl.dll")) 
+  //  PackageProviders().Append(winrt::NativeUICtrl::ReactPackageProvider());
 
 
   //PackageProviders().Append(winrt::SampleLibraryCS::ReactPackageProvider());
