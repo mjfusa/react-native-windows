@@ -6,7 +6,7 @@
  * @flow
  */
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import {
   NativeModules,
   SafeAreaView,
@@ -22,7 +22,6 @@ import Main from "./Main";
 import View2 from "./View2";
 
 import DeviceInfoComponent from './myDeviceInfo'
-//import PackageInventory from './PackageInventory'
 
 import {
   Header,
@@ -38,13 +37,15 @@ class App extends React.Component {
     this.iview=0;
 
     this.state = {
+      installedModules:[],
+      installedCnt: 0,
       modules: [
         {module: "DeviceInfo2.dll", installed: false},
         {module: "SampleLibraryCpp.dll", installed: false}
     ]
     }
   }
-  
+
   state = {
     renderView: 0,
   };
@@ -55,7 +56,7 @@ class App extends React.Component {
     });
   }
 
-  getDeviceModel = (modulename) => {
+  getIsModuleInstalled = (modulename) => {
     return new Promise((resolve, reject) => {
       var vm = NativeModules.OptionalPackages;
         vm.isPackageInstalled(modulename, function(result, error) {
@@ -69,12 +70,7 @@ class App extends React.Component {
     })
   }
 
-myFunc(newMod, index, arr) {
-  console.log(mod.module);
-  // return true;
-}
- 
-updateCourseGrade = (installed, modName) => {
+updateModulesList = (installed, modName) => {
   const mod = this.state.modules.find(mod => mod.module === modName);
   if (mod) {
     const installedModule = { ...mod, installed };
@@ -86,23 +82,52 @@ updateCourseGrade = (installed, modName) => {
 }
 
 getInstalledModule = async (mod) => {
-  var result  = await this.getDeviceModel(mod.module);
+  var result  = await this.getIsModuleInstalled(mod.module);
   console.log(result);
-  this.updateCourseGrade(result,mod.module);
+  var cnt = this.state.installedCnt + 1;
+  if (result) {
+    this.setState({installedCnt: cnt});
+  }
+
+  this.updateModulesList(result, mod.module);
 }
 
 componentDidMount () {
   this.state.modules.map((mod) => {
     this.getInstalledModule(mod);
   });
+
 }
 
+
 render() {
-    switch (this.state.renderView) {
+  var cnt = this.state.installedCnt;
+    switch (cnt) {
       case 1:
         return (
           <View>
-          <Main callbackFromParent={this.myCallback}  />
+
+          <View><Text>Native Module:</Text></View>
+          <DeviceInfoComponent />
+
+        </View>
+        );
+      case 2:
+        return (
+          <View>
+          <View><Text>Native Module:</Text></View>
+          <DeviceInfoComponent />
+          <Text>Native UI Module:</Text>
+          <View>
+          <View2/>
+          </View>
+
+          </View>
+        );
+      default:
+        return (
+          <View>
+          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
           <Text>
           {
             this.state.installedModules.map((y) => {
@@ -113,28 +138,18 @@ render() {
             })
           }
           </Text>
-        </View>
+          </View>
         );
-      case 2:
-        return (
-          <View>
-          <Main callbackFromParent={this.myCallback}  />
-          <DeviceInfoComponent />
-          <View2/>
-        </View>
-        );
-      default:
-        return <Main callbackFromParent={this.myCallback}  />;
     }
   }
 }
 
 function renderIf (mod) {
   if (mod.installed) {
-    return (<Text>{mod.module} installed</Text>);
+    return (<Text>{mod.module} installed{"\n"}</Text>);
   }
   else {
-    return (<Text>{mod.module} not installed</Text>);
+    return (<Text>{"\n"}{mod.module} not installed{"\n"}</Text>);
   }
 }
 
@@ -180,3 +195,16 @@ const styles = StyleSheet.create({
 
 
 export default App;
+
+
+          {/* <Main callbackFromParent={this.myCallback}  />
+          <Text>
+          {
+            this.state.installedModules.map((y) => {
+              return (
+              <Text>
+              {renderIf(y)}
+              </Text>)
+            })
+          }
+          </Text> */}

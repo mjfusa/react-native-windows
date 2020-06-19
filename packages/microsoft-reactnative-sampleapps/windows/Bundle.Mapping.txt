@@ -3,3 +3,4 @@
 
 [ExternalPackages]
 ".\OptionalDeviceInfo\AppPackages\OptionalDeviceInfo_1.0.0.0_Debug_Test\OptionalDeviceInfo_1.0.0.0_x64_Debug.appxbundle" "OptionalDeviceInfo_1.0.0.0_x64_Debug.appxbundle"
+".\OptionalUIComponent\AppPackages\OptionalUIComponent_1.0.0.0_Debug_Test\OptionalUIComponent_1.0.0.0_x64_Debug.appxbundle" "OptionalUIComponent_1.0.0.0_x64_Debug.appxbundle"

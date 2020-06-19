@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -8,7 +8,7 @@
   IgnorableNamespaces="uap mp uap3">
 
   <Identity
-    Name="8d527f42-45bb-491a-93a7-8f41f23d87bc"
+    Name="SampleApp.OptionalUIComponent"
     Publisher="CN=mikefra"
     Version="1.0.0.0" />
 
@@ -26,7 +26,7 @@
   
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
-    <uap3:MainPackageDependency Name="MainPackageIdentityName" />
+    <uap3:MainPackageDependency Name="SampleApp" />
   </Dependencies>
 
 </Package>

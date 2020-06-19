@@ -106,7 +106,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <PackageCertificateThumbprint>BF78848E08B0C56AA6DA06FD76A8F10145BA5A0A</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>BF522299900301BD837A41234AA0DD90F88DD0FC</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
@@ -150,6 +150,10 @@
     <ClInclude Include="headers\NativeUICtrl.1.h" />
     <ClInclude Include="headers\NativeUICtrl.2.h" />
     <ClInclude Include="headers\NativeUICtrl.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.0.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.1.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.2.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.h" />
     <ClInclude Include="MainPage.h">
       <DependentUpon>MainPage.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -170,6 +174,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="packages.config" />
+    <None Include="SampleAppCpp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
@@ -216,14 +221,8 @@
     <Natvis Include="$(ReactNativeWindowsDir)\Folly\Folly.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\NativeUICtrl\NativeUICtrl.vcxproj">
-      <Project>{2ec573f2-3107-4b86-8a88-6534ff7e5b40}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\PackageInventory\PackageInventory.vcxproj">
       <Project>{8e963bea-ed2a-495f-a95d-d9eacff70d7d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SampleLibraryCpp\SampleLibraryCpp.vcxproj">
-      <Project>{47eec7f3-40d3-49ba-82c1-eaf103b54215}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -25,6 +25,10 @@
     <ClInclude Include="headers\NativeUICtrl.1.h" />
     <ClInclude Include="headers\NativeUICtrl.2.h" />
     <ClInclude Include="headers\NativeUICtrl.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.0.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.1.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.2.h" />
+    <ClInclude Include="headers\SampleLibraryCpp.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
@@ -60,6 +64,7 @@
   <ItemGroup>
     <None Include="PropertySheet.props" />
     <None Include="packages.config" />
+    <None Include="SampleAppCpp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="readme.txt" />

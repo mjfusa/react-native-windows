@@ -22,7 +22,7 @@
     <OptionalPackage>true</OptionalPackage>
     <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
     <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
-    <PackageCertificateThumbprint>BF78848E08B0C56AA6DA06FD76A8F10145BA5A0A</PackageCertificateThumbprint>
+    <PackageCertificateThumbprint>BF522299900301BD837A41234AA0DD90F88DD0FC</PackageCertificateThumbprint>
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>

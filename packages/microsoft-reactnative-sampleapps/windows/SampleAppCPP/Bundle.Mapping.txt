@@ -1,3 +1,5 @@
 [OptionalProjects]
 "..\OptionalDeviceInfo\OptionalDeviceInfo.csproj"
+"..\OptionalUIComponent\OptionalUIComponent.csproj"
+
 
