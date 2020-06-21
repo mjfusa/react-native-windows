@@ -74,8 +74,7 @@ updateModulesList = (installed, modName) => {
   const mod = this.state.modules.find(mod => mod.module === modName);
   if (mod) {
     const installedModule = { ...mod, installed };
-    const installedModules = this.state.modules
-      .filter(mod => mod.module !== modName)
+      const installedModules = this.state.installedModules
       .concat(installedModule);
     this.setState({ installedModules });
   }
@@ -99,13 +98,22 @@ componentDidMount () {
 
 }
 
-
 render() {
   var cnt = this.state.installedCnt;
     switch (cnt) {
       case 1:
         return (
           <View>
+
+          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
+          {
+            this.state.installedModules.map((y) => {
+              return (
+              <Text>
+              {renderIf(y)}
+              </Text>)
+            })
+          }
 
           <View><Text>Native Module:</Text></View>
           <DeviceInfoComponent />
@@ -115,20 +123,8 @@ render() {
       case 2:
         return (
           <View>
-          <View><Text>Native Module:</Text></View>
-          <DeviceInfoComponent />
-          <Text>Native UI Module:</Text>
-          <View>
-          <View2/>
-          </View>
 
-          </View>
-        );
-      default:
-        return (
-          <View>
           <Text>{"\n"}{"\n"}Install status of optional components:</Text>
-          <Text>
           {
             this.state.installedModules.map((y) => {
               return (
@@ -137,7 +133,26 @@ render() {
               </Text>)
             })
           }
-          </Text>
+
+          <Text>Native Module:</Text>
+          <DeviceInfoComponent />
+          <Text>Native UI Module:</Text>
+          <View2/>
+
+          </View>
+        );
+      default:
+        return (
+          <View>
+          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
+          {
+            this.state.installedModules.map((y) => {
+              return (
+              <Text>
+              {renderIf(y)}
+              </Text>)
+            })
+          }
           </View>
         );
     }
@@ -146,10 +161,10 @@ render() {
 
 function renderIf (mod) {
   if (mod.installed) {
-    return (<Text>{mod.module} installed{"\n"}</Text>);
+    return (<Text>{mod.module} installed</Text>);
   }
   else {
-    return (<Text>{"\n"}{mod.module} not installed{"\n"}</Text>);
+    return (<Text>{mod.module} not installed</Text>);
   }
 }
 
@@ -195,16 +210,3 @@ const styles = StyleSheet.create({
 
 
 export default App;
-
-
-          {/* <Main callbackFromParent={this.myCallback}  />
-          <Text>
-          {
-            this.state.installedModules.map((y) => {
-              return (
-              <Text>
-              {renderIf(y)}
-              </Text>)
-            })
-          }
-          </Text> */}

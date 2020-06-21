@@ -50,11 +50,8 @@ class DeviceInfoComponent extends React.Component {
     render() {
       return (
         <View style={styles.sectionContainer}>
-         <StatusBar barStyle="dark-content" /> 
-     <View>
              <Button title="Get model" onPress={this.getModel} /> 
              <Text>{this.state.model}</Text>
-        </View>
         </View> 
       );
     }
@@ -72,8 +69,9 @@ const styles = StyleSheet.create({
       backgroundColor: Colors.white,
     },
     sectionContainer: {
-      marginTop: 32,
+      margin: 10,
       paddingHorizontal: 24,
+      backgroundColor: Colors.lighter
     },
     sectionTitle: {
       fontSize: 24,

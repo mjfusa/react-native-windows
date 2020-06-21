@@ -7,11 +7,10 @@
 #include <ReactPackageProvider.h>
 #include <ReactPropertyBag.h>
 
-#include <headers/SampleLibraryCpp.h>
-
-#include <winrt/NativeUICtrl.h>
 #include <winrt/PackageInventory.h>
+
 #include <headers/DeviceInfo2.h>
+#include <headers/SampleLibraryCpp.h>
 
 using namespace winrt;
 using namespace xaml;
