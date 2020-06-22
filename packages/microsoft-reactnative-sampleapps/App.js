@@ -109,8 +109,8 @@ render() {
           {
             this.state.installedModules.map((y) => {
               return (
-              <Text>
-              {renderIf(y)}
+                <Text key={y.module}>
+                {renderIf(y)}
               </Text>)
             })
           }
@@ -128,8 +128,8 @@ render() {
           {
             this.state.installedModules.map((y) => {
               return (
-              <Text>
-              {renderIf(y)}
+                <Text key={y.module}>
+                {renderIf(y)}
               </Text>)
             })
           }
@@ -148,8 +148,8 @@ render() {
           {
             this.state.installedModules.map((y) => {
               return (
-              <Text>
-              {renderIf(y)}
+                <Text key={y.module}>
+                {renderIf(y)}
               </Text>)
             })
           }
