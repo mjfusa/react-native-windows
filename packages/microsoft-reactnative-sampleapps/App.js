@@ -15,45 +15,30 @@ import {
   View,
   Text,
   StatusBar,
-  Button
+  Button,
+  YellowBox
 } from 'react-native';
 
-import Main from "./Main";
-import View2 from "./View2";
+import NativeUIControl from "./NativeUIControl";
 
-import DeviceInfoComponent from './myDeviceInfo'
+import DeviceInfoComponent from './DeviceInfoComponent'
 
 import {
   Header,
-  LearnMoreLinks,
   Colors,
-  DebugInstructions,
-  ReloadInstructions,
 } from 'react-native/Libraries/NewAppScreen';
 
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.iview=0;
-
     this.state = {
       installedModules:[],
       installedCnt: 0,
       modules: [
-        {module: "DeviceInfo2.dll", installed: false},
-        {module: "SampleLibraryCpp.dll", installed: false}
+        {module: "DeviceInfo2.dll", installed: false, component: <DeviceInfoComponent/>},
+        {module: "SampleLibraryCpp.dll", installed: false, component: <NativeUIControl/>}
     ]
     }
-  }
-
-  state = {
-    renderView: 0,
-  };
-
-  myCallback  = (iview) => {
-    this.setState({
-      renderView: iview
-    });
   }
 
   getIsModuleInstalled = (modulename) => {
@@ -100,8 +85,6 @@ componentDidMount () {
 
 render() {
   var cnt = this.state.installedCnt;
-    switch (cnt) {
-      case 1:
         return (
           <View>
 
@@ -109,62 +92,27 @@ render() {
           {
             this.state.installedModules.map((y) => {
               return (
-                <Text key={y.module}>
+                <View key={y.module}>
                 {renderIf(y)}
-              </Text>)
+                </View>
+              )
             })
           }
-
-          <View><Text>Native Module:</Text></View>
-          <DeviceInfoComponent />
-
-        </View>
-        );
-      case 2:
-        return (
-          <View>
-
-          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
-          {
-            this.state.installedModules.map((y) => {
-              return (
-                <Text key={y.module}>
-                {renderIf(y)}
-              </Text>)
-            })
-          }
-
-          <Text>Native Module:</Text>
-          <DeviceInfoComponent />
-          <Text>Native UI Module:</Text>
-          <View2/>
-
+          
           </View>
         );
-      default:
-        return (
-          <View>
-          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
-          {
-            this.state.installedModules.map((y) => {
-              return (
-                <Text key={y.module}>
-                {renderIf(y)}
-              </Text>)
-            })
-          }
-          </View>
-        );
-    }
-  }
+}
 }
 
 function renderIf (mod) {
-  if (mod.installed) {
-    return (<Text>{mod.module} installed</Text>);
-  }
-  else {
-    return (<Text>{mod.module} not installed</Text>);
+  switch (mod.installed) {
+    case true:
+      return (<View>
+        <Text>{mod.module} installed</Text>
+        {mod.component}
+        </View>)
+    default:
+      return (<Text>{mod.module} not installed</Text>)
   }
 }
 
