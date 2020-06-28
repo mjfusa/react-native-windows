@@ -121,6 +121,7 @@
     <ClInclude Include="RNWManagePackages.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ManagePackages.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
