@@ -8,6 +8,7 @@
 #include <ReactPropertyBag.h>
 
 #include <winrt/PackageInventory.h>
+#include <winrt/RNWManagePackages.h>
 
 #include <headers/DeviceInfo2.h>
 #include <headers/SampleLibraryCpp.h>
@@ -47,6 +48,7 @@ App::App() noexcept {
 
   PackageProviders().Append(make<ReactPackageProvider>()); // Includes all modules in this project
   PackageProviders().Append(winrt::PackageInventory::ReactPackageProvider());
+  PackageProviders().Append(winrt::RNWManagePackages::ReactPackageProvider());
 
     // Optional Native Module
   if (IsPackageInstalled(L"DeviceInfo2.dll"))

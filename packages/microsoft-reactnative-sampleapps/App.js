@@ -19,8 +19,11 @@ import {
   YellowBox
 } from 'react-native';
 
-import NativeUIControl from "./NativeUIControl";
+// Package Manager
+import FindPackageForUser from './FindPackageForUser'
 
+// Optional Components
+import NativeUIControl from "./NativeUIControl";
 import DeviceInfoComponent from './DeviceInfoComponent'
 
 import {
@@ -87,7 +90,7 @@ render() {
   var cnt = this.state.installedCnt;
         return (
           <View>
-
+          <FindPackageForUser/>
           <Text>{"\n"}{"\n"}Install status of optional components:</Text>
           {
             this.state.installedModules.map((y) => {

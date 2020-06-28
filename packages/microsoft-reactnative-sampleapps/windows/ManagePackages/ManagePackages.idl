@@ -1,0 +1,15 @@
+namespace RNWManagePackages
+{
+    runtimeclass ManagePackages
+    {
+        ManagePackages();
+        String DeviceModel();
+    };
+
+    [default_interface]
+    runtimeclass ReactPackageProvider : Microsoft.ReactNative.IReactPackageProvider
+    {
+        ReactPackageProvider();
+    };
+
+}
