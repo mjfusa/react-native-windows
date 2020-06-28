@@ -110,8 +110,9 @@
     <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
     <AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
     <GenerateTestArtifacts>True</GenerateTestArtifacts>
-    <AppxBundle>Never</AppxBundle>
+    <AppxBundle>Auto</AppxBundle>
     <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -223,9 +224,6 @@
   <ItemGroup>
     <ProjectReference Include="..\ManagePackages\RNWManagePackages.vcxproj">
       <Project>{51e3e032-c3eb-4c46-8306-0b6d41e68977}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\PackageInventory\PackageInventory.vcxproj">
-      <Project>{8e963bea-ed2a-495f-a95d-d9eacff70d7d}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

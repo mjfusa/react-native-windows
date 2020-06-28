@@ -1,4 +1,4 @@
-import { NativeModules } from 'react-native';
+import {NativeEventEmitter, NativeModules } from 'react-native';
 import React from 'react';
 import {
     SafeAreaView,
@@ -19,7 +19,9 @@ import {
     DebugInstructions,
     ReloadInstructions,
   } from 'react-native/Libraries/NewAppScreen';
-  
+
+  const ManagePackagesEmitter = new NativeEventEmitter(NativeModules.ManagePackages);
+
 class DeviceInfoComponent extends React.Component {
     constructor(props) {
       super(props);
@@ -29,8 +31,21 @@ class DeviceInfoComponent extends React.Component {
         result: '',
       }
     }
+
+    componentDidMount() {
+      ManagePackagesEmitter.addListener('PackageInstalledEvent', this.packageInstalledEventHandler, this);
+    }
   
-    getPackageDisplayName = () => {
+
+    componentWillUnmount() {
+      ManagePackagesEmitter.removeListener('PackageInstalledEvent', this.packageInstalledEventHandler, this);
+    }
+  
+    packageInstalledEventHandler(result) {
+      console.log("Event was fired with: " + result);
+    }
+
+        getPackageDisplayName = () => {
         return new Promise((resolve, reject) => {
           var vm = NativeModules.ManagePackages;
             vm.findPackageForUser(this.state.packageDisplayName, function(result, error) {
@@ -58,7 +73,7 @@ class DeviceInfoComponent extends React.Component {
       return (
         <View style={styles.sectionContainer}>
             <TextInput onChangeText={this.handlePackageName}/>
-             <Button title="Get packageDisplayName" onPress={this._getPackage} /> 
+             <Button title="Get Package Display Name" onPress={this._getPackage} /> 
              <Text>{this.state.result}</Text>
         </View> 
       );

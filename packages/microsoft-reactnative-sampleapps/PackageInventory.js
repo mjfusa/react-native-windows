@@ -31,7 +31,7 @@ class PackagesInventory extends React.Component {
     
     getDeviceModel = (modulename) => {
         return new Promise((resolve, reject) => {
-          var vm = NativeModules.OptionalPackages;
+          var vm = NativeModules.ManagePackages;
             vm.isPackageInstalled(modulename, function(result, error) {
                 if (error) {
                     reject(error);
@@ -43,12 +43,6 @@ class PackagesInventory extends React.Component {
         })
     }
     
-
-    // getModel = async () => {
-    //   var model = await this.getDeviceModel("a.dll");
-    //   this.setState( { model: model});
-    // }
-  
     render() {
       return (
         <View style={styles.sectionContainer}>
@@ -58,15 +52,11 @@ class PackagesInventory extends React.Component {
         </View> 
       );
     }
-
-
-
   }
-
   
   getDeviceModel = (modulename) => {
     return new Promise((resolve, reject) => {
-      var vm = NativeModules.OptionalPackages;
+      var vm = NativeModules.ManagePackages;
         vm.isPackageInstalled(modulename, function(result, error) {
             if (error) {
                 reject(error);
@@ -106,8 +96,6 @@ class Item extends React.Component {
       );
   }
 }
-
-
 
 const styles = StyleSheet.create({
     scrollView: {

@@ -7,7 +7,6 @@
 #include <ReactPackageProvider.h>
 #include <ReactPropertyBag.h>
 
-#include <winrt/PackageInventory.h>
 #include <winrt/RNWManagePackages.h>
 
 #include <headers/DeviceInfo2.h>
@@ -47,7 +46,6 @@ App::App() noexcept {
   ReactPropertyBag::Set(InstanceSettings().Properties(), ReactPropertyId<hstring>{L"Prop2"}, L"Hello World!");
 
   PackageProviders().Append(make<ReactPackageProvider>()); // Includes all modules in this project
-  PackageProviders().Append(winrt::PackageInventory::ReactPackageProvider());
   PackageProviders().Append(winrt::RNWManagePackages::ReactPackageProvider());
 
     // Optional Native Module

@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 
 // Package Manager
-import FindPackageForUser from './FindPackageForUser'
+import ManagePackages from './ManagePackages'
 
 // Optional Components
 import NativeUIControl from "./NativeUIControl";
@@ -46,7 +46,7 @@ class App extends React.Component {
 
   getIsModuleInstalled = (modulename) => {
     return new Promise((resolve, reject) => {
-      var vm = NativeModules.OptionalPackages;
+      var vm = NativeModules.ManagePackages;
         vm.isPackageInstalled(modulename, function(result, error) {
             if (error) {
                 reject(error);
@@ -90,7 +90,7 @@ render() {
   var cnt = this.state.installedCnt;
         return (
           <View>
-          <FindPackageForUser/>
+          <ManagePackages/>
           <Text>{"\n"}{"\n"}Install status of optional components:</Text>
           {
             this.state.installedModules.map((y) => {
