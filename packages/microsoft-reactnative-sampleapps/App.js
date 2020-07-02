@@ -91,17 +91,16 @@ render() {
         return (
           <View>
           <ManagePackages/>
-          <Text>{"\n"}{"\n"}Install status of optional components:</Text>
+          <Text style={styles.sectionTitle}>Install status of optional components:</Text>
           {
             this.state.installedModules.map((y) => {
               return (
-                <View key={y.module}>
+                <View  key={y.module}>
                 {renderIf(y)}
                 </View>
               )
             })
           }
-          
           </View>
         );
 }
@@ -110,12 +109,12 @@ render() {
 function renderIf (mod) {
   switch (mod.installed) {
     case true:
-      return (<View>
-        <Text>{mod.module} installed</Text>
+      return (<View style={styles.sectionTitle}>
+        <Text style={{paddingHorizontal:20, fontSize: 16}}>{mod.module} installed</Text>
         {mod.component}
         </View>)
     default:
-      return (<Text>{mod.module} not installed</Text>)
+      return (<Text style={{paddingHorizontal:20, fontSize: 16}}>{mod.module}{"\t"} not installed</Text>)
   }
 }
 
@@ -135,6 +134,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   sectionTitle: {
+    paddingHorizontal:20,
     fontSize: 24,
     fontWeight: '600',
     color: Colors.black,

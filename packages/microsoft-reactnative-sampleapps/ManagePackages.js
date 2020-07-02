@@ -43,6 +43,7 @@ class DeviceInfoComponent extends React.Component {
   
     packageInstalledEventHandler(result) {
       console.log("Event was fired with: " + result);
+      this.setState({result: "Optional Package: " + result});
     }
 
         getPackageDisplayName = () => {
@@ -74,7 +75,7 @@ class DeviceInfoComponent extends React.Component {
         <View style={styles.sectionContainer}>
             <TextInput onChangeText={this.handlePackageName}/>
              <Button title="Get Package Display Name" onPress={this._getPackage} /> 
-             <Text>{this.state.result}</Text>
+             <Text>{this.state.result}</Text> 
         </View> 
       );
     }
