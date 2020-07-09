@@ -2,6 +2,9 @@
 #include "ManagePackages.h"
 //#include "ManagePackages.g.cpp"
 
+using namespace winrt;
+using namespace winrt::Windows::Foundation::Collections;
+
 namespace RNWManagePackages {
 
 ManagePackages::ManagePackages() {
@@ -19,13 +22,16 @@ bool ManagePackages::IsPackageInstalled(std::wstring moduleName) noexcept {
 
 winrt::hstring ManagePackages::FindPackageForUser(std::wstring packageName) noexcept {
   auto _packageManager = PackageManager();
-  Package _currentPackage({nullptr});
   winrt::hstring name(L"");
   std::wstring estring;
   try {
-    _currentPackage = _packageManager.FindPackageForUser(estring, packageName);
-    if (_currentPackage) {
-      name = _currentPackage.Id().Name();
+     auto _currentPackageList =  _packageManager.FindPackagesForUser(estring, packageName);
+     std::for_each (begin(_currentPackageList), end(_currentPackageList), [&](Package value) {
+         name = value.Id().Name();
+    });
+
+     if (name.size()>0) {
+      name = _currentPackageList.First().Current().Id().Name();
     } else {
       name = L"ERROR: Package Name not found. App not installed or full Package Family Name not specified.";
     }

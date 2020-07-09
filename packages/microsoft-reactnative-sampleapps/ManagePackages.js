@@ -43,7 +43,7 @@ class DeviceInfoComponent extends React.Component {
   
     packageInstalledEventHandler(result) {
       console.log("Event was fired with: " + result);
-      this.setState({result: "Optional Package: " + result});
+      this.setState({result: "Optional Package: " + result +'. Please restart app.'});
     }
 
         getPackageDisplayName = () => {
@@ -73,9 +73,10 @@ class DeviceInfoComponent extends React.Component {
     render() {
       return (
         <View style={styles.sectionContainer}>
-            <TextInput onChangeText={this.handlePackageName}/>
-             <Button title="Get Package Display Name" onPress={this._getPackage} /> 
-             <Text>{this.state.result}</Text> 
+            {/* <TextInput onChangeText={this.handlePackageName}/>
+             <Button title="Get Package Display Name" onPress={this._getPackage} />  */}
+             <Text>Package Installing:</Text>
+             <Text style={{fontSize:18}}>{this.state.result}</Text> 
         </View> 
       );
     }
