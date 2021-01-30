@@ -1,0 +1,19 @@
+{
+  "baseVersion": "0.0.0-c66aa8abc",
+  "overrides": [
+    {
+      "type": "copy",
+      "directory": "js",
+      "baseDirectory": "packages/rn-tester/js",
+      "baseHash": "dd73671525183bb78c83808238030d731d227dce",
+      "issue": 4054
+    },
+    {
+      "type": "patch",
+      "file": "package.json",
+      "baseFile": "packages/rn-tester/package.json",
+      "baseHash": "aa754486bc846ca20486fa12f887b58f8dc40084",
+      "issue": 4054
+    }
+  ]
+}

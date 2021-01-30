@@ -16,24 +16,17 @@
     yarn
     yarn build
     ```
-Note that react-native-windows is a monorepo and relies on monorepo tools like yarn and lerna.  See [this page](Monorepo.md) for more details.
+Note that react-native-windows is a monorepo and relies on monorepo tools like yarn and lage.  See [this page](monorepo.md) for more details.
 
 # Running the Playground app
   There are two ways to run the app.  In a fully managed easy way, or by manually running all the required steps:
 
 ## Automatic
-The playground app can be run in a completely automatic way by using `react-native run-windows --sln windows\playground.sln`.
-
-If you haven't already, install the react-native-cli  (One time only!)
-```cmd
-npm install -g react-native-cli
-```
-
-Then
+The playground app can be run in a completely automatic way by doing:
 
 ```cmd
 cd packages\playground
-react-native run-windows --sln windows\playground.sln
+yarn windows --sln windows\playground.sln
 ```
 
 ## Manual

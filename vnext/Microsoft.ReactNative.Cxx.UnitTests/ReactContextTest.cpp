@@ -8,6 +8,10 @@
 using namespace winrt::Microsoft::ReactNative;
 
 struct ReactContextStub : implements<ReactContextStub, IReactContext> {
+  IReactSettingsSnapshot SettingsSnapshot() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
   IReactPropertyBag Properties() noexcept {
     VerifyElseCrashSz(false, "Not implemented");
   }
@@ -21,6 +25,10 @@ struct ReactContextStub : implements<ReactContextStub, IReactContext> {
   }
 
   IReactDispatcher JSDispatcher() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  IInspectable JSRuntime() noexcept {
     VerifyElseCrashSz(false, "Not implemented");
   }
 
@@ -49,8 +57,50 @@ struct ReactContextStub : implements<ReactContextStub, IReactContext> {
     Module = eventEmitterName;
     Method = eventName;
     auto writer = MakeJSValueTreeWriter();
+    writer.WriteArrayBegin();
     paramsArgWriter(writer);
+    writer.WriteArrayEnd();
     Args = TakeJSValue(writer);
+  }
+
+  uint16_t DebuggerPort() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool DebuggerBreakOnNextLine() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseDirectDebugger() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseFastRefresh() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseWebDebugger() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring DebugBundlePath() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring BundleRootPath() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring SourceBundleHost() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  uint16_t SourceBundlePort() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring JavaScriptBundleFile() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
   }
 
   std::wstring Module;
@@ -194,10 +244,8 @@ TEST_CLASS (ReactContextTest) {
     TestCheckEqual(77u, reactContextMock->Args[0]["prop2"]);
 
     context.EmitJSEvent(L"module1", L"event1", [](IJSValueWriter const &writer) {
-      writer.WriteArrayBegin();
       WriteValue(writer, 10u);
       WriteValue(writer, 19);
-      writer.WriteArrayEnd();
     });
     TestCheckEqual(10u, reactContextMock->Args[0]);
     TestCheckEqual(19, reactContextMock->Args[1]);

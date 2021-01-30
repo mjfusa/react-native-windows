@@ -5,25 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @format
- * @flow
+ * @flow strict-local
  */
 
 'use strict';
 
-const RCTDeviceEventEmitter = require('../../EventEmitter/RCTDeviceEventEmitter');
-const UIManager = require('../../ReactNative/UIManager');
-
+import RCTDeviceEventEmitter from '../../EventEmitter/RCTDeviceEventEmitter';
+import UIManager from '../../ReactNative/UIManager';
 import NativeAccessibilityInfo from './NativeAccessibilityInfo';
+import type {EventSubscription} from 'react-native/Libraries/vendor/emitter/EventEmitter';
 
 const REDUCE_MOTION_EVENT = 'reduceMotionDidChange';
 const TOUCH_EXPLORATION_EVENT = 'touchExplorationDidChange';
 
-type ChangeEventName = $Keys<{
-  change: string,
-  reduceMotionChanged: string,
-  screenReaderChanged: string,
-  ...
-}>;
+type AccessibilityEventDefinitions = {
+  reduceMotionChanged: [boolean],
+  screenReaderChanged: [boolean],
+  // alias for screenReaderChanged
+  change: [boolean],
+};
 
 const _subscriptions = new Map();
 
@@ -34,7 +34,7 @@ const _subscriptions = new Map();
  * well as to register to be notified when the state of the screen reader
  * changes.
  *
- * See http://facebook.github.io/react-native/docs/accessibilityinfo.html
+ * See https://reactnative.dev/docs/accessibilityinfo.html
  */
 
 const AccessibilityInfo = {
@@ -91,54 +91,61 @@ const AccessibilityInfo = {
    *
    * Same as `isScreenReaderEnabled`
    */
+  // $FlowFixMe[unsafe-getters-setters]
   get fetch(): () => Promise<boolean> {
     console.warn(
-      'AccessibilityInfo.fetch is deprecated, call Accessibility.isScreenReaderEnabled instead',
+      'AccessibilityInfo.fetch is deprecated, call AccessibilityInfo.isScreenReaderEnabled instead',
     );
     return this.isScreenReaderEnabled;
   },
 
-  addEventListener: function(
-    eventName: ChangeEventName,
-    handler: Function,
-  ): void {
+  addEventListener: function<K: $Keys<AccessibilityEventDefinitions>>(
+    eventName: K,
+    handler: (...$ElementType<AccessibilityEventDefinitions, K>) => void,
+  ): EventSubscription {
     let listener;
 
     if (eventName === 'change' || eventName === 'screenReaderChanged') {
       listener = RCTDeviceEventEmitter.addListener(
         TOUCH_EXPLORATION_EVENT,
-        enabled => {
-          handler(enabled);
-        },
+        handler,
       );
     } else if (eventName === 'reduceMotionChanged') {
       listener = RCTDeviceEventEmitter.addListener(
         REDUCE_MOTION_EVENT,
-        enabled => {
-          handler(enabled);
-        },
+        handler,
       );
     }
 
+    // $FlowFixMe[escaped-generic]
     _subscriptions.set(handler, listener);
+
+    return {
+      remove: () => {
+        // $FlowIssue flow does not recognize handler properly
+        AccessibilityInfo.removeEventListener<K>(eventName, handler);
+      },
+    };
   },
 
-  removeEventListener: function(
-    eventName: ChangeEventName,
-    handler: Function,
+  removeEventListener: function<K: $Keys<AccessibilityEventDefinitions>>(
+    eventName: K,
+    handler: (...$ElementType<AccessibilityEventDefinitions, K>) => void,
   ): void {
+    // $FlowFixMe[escaped-generic]
     const listener = _subscriptions.get(handler);
     if (!listener) {
       return;
     }
     listener.remove();
+    // $FlowFixMe[escaped-generic]
     _subscriptions.delete(handler);
   },
 
   /**
    * Set accessibility focus to a react component.
    *
-   * See http://facebook.github.io/react-native/docs/accessibilityinfo.html#setaccessibilityfocus
+   * See https://reactnative.dev/docs/accessibilityinfo.html#setaccessibilityfocus
    */
   setAccessibilityFocus: function(reactTag: number): void {
     UIManager.sendAccessibilityEvent(
@@ -150,7 +157,7 @@ const AccessibilityInfo = {
   /**
    * Post a string to be announced by the screen reader.
    *
-   * See http://facebook.github.io/react-native/docs/accessibilityinfo.html#announceforaccessibility
+   * See https://reactnative.dev/docs/accessibilityinfo.html#announceforaccessibility
    */
   announceForAccessibility: function(announcement: string): void {
     if (NativeAccessibilityInfo) {

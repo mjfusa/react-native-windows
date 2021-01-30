@@ -1,7 +1,7 @@
 'use strict';
 
 import * as React from 'react';
-import { Insets, NativeSyntheticEvent, StyleSheet, ViewStyle } from 'react-native';
+import { Insets, NativeSyntheticEvent, StyleSheet, Text, ViewStyle } from 'react-native';
 
 import { TextWin32 } from '../../Text/TextWin32';
 import { ViewWin32 } from '../../View/ViewWin32';
@@ -114,54 +114,54 @@ class TouchableWin32WithoutFeedback extends React.Component<ITouchableWin32Witho
     );
   }
 
-  private _touchableHandlePress = (e: IPressEvent) => {
+  private readonly _touchableHandlePress = (e: IPressEvent) => {
     this.props.onPress && this.props.onPress(e);
   };
 
-  private _touchableHandleActivePressIn = (e: IPressEvent) => {
+  private readonly _touchableHandleActivePressIn = (e: IPressEvent) => {
     this.props.onPressIn && this.props.onPressIn(e);
   };
 
-  private _touchableHandleActivePressOut = (e: IPressEvent) => {
+  private readonly _touchableHandleActivePressOut = (e: IPressEvent) => {
     this.props.onPressOut && this.props.onPressOut(e);
   };
 
-  private _touchableHandleLongPress = (e: IPressEvent) => {
+  private readonly _touchableHandleLongPress = (e: IPressEvent) => {
     this.props.onLongPress && this.props.onLongPress(e);
   };
 
-  private _touchableGetPressRectOffset = (): Insets => {
+  private readonly _touchableGetPressRectOffset = (): Insets => {
     return this.props.pressRetentionOffset || PRESS_RETENTION_OFFSET;
   };
 
-  private _touchableGetHitSlop = (): Insets => {
+  private readonly _touchableGetHitSlop = (): Insets => {
     return this.props.hitSlop;
   };
 
-  private _touchableGetHighlightDelayMS = (): number => {
+  private readonly _touchableGetHighlightDelayMS = (): number => {
     return this.props.delayPressIn || 0;
   };
 
-  private _touchableGetLongPressDelayMS = (): number => {
+  private readonly _touchableGetLongPressDelayMS = (): number => {
     return this.props.delayLongPress === 0 ? 0 : this.props.delayLongPress || 500;
   };
 
-  private _touchableGetPressOutDelayMS = (): number => {
+  private readonly _touchableGetPressOutDelayMS = (): number => {
     return this.props.delayPressOut || 0;
   };
 
-  private _onFocus = () => {
+  private readonly _onFocus = () => {
     this.setState({ isFocused: true });
   };
 
-  private _onBlur = () => {
+  private readonly _onBlur = () => {
     this.setState({ isFocused: false });
   };
 
   /**
    * The generated style uses hard-coded border width values
    */
-  private _generateStyle = (state: ITouchableWin32State): ViewStyle => {
+  private readonly _generateStyle = (state: ITouchableWin32State): ViewStyle => {
     const finalStyle: ViewStyle = {
       borderWidth: state.isFocused ? 5 : 0,
       borderColor: 'red',
@@ -186,13 +186,18 @@ interface ITouchableWin32HighlightProps extends IViewWin32Props {
   children?: IRenderChild<ITouchableWin32State>;
 }
 
+interface ITouchableWin32HighlightComponentProps extends ITouchableWin32HighlightProps {
+  // Used as an imperative handle to the TouchableWin32 interface - primarily for focus()
+  innerRef?: React.Ref<TouchableWin32>;
+}
+
 /**
  * Example implementation of TouchableHighlight - not meant for use outside these examples
  * The main difference between a ful TouchableHiglight implementation and this example is that
  * TouchableHighlight should manipulate the opacity of the wrapped view to display the underlay color.
  * This example merely uses hard coded color values to distinguish between different control states
  */
-class TouchableWin32Highlight extends React.Component<ITouchableWin32HighlightProps, {}> {
+class TouchableWin32HighlightComponent extends React.Component<ITouchableWin32HighlightComponentProps, {}> {
 
   public render() {
     return (
@@ -217,59 +222,60 @@ class TouchableWin32Highlight extends React.Component<ITouchableWin32HighlightPr
         onMouseLeave={this._mouseLeave}
         renderStyle={this._generateStyle}
         children={this.props.children}
+        ref={this.props.innerRef}
       />
     );
   }
 
-  private _touchableHandlePress = (e: IPressEvent) => {
+  private readonly _touchableHandlePress = (e: IPressEvent) => {
     this.props.onPress && this.props.onPress(e);
     this.setState({ isPressed: false });
   };
-  private _touchableHandleActivePressIn = (e: IPressEvent) => {
+  private readonly _touchableHandleActivePressIn = (e: IPressEvent) => {
     this.props.onPressIn && this.props.onPressIn(e);
     this.setState({ isPressed: true });
   };
-  private _touchableHandleActivePressOut = (e: IPressEvent) => {
+  private readonly _touchableHandleActivePressOut = (e: IPressEvent) => {
     this.props.onPressOut && this.props.onPressOut(e);
     this.setState({ isPressed: false });
   };
-  private _touchableHandleLongPress = (e: IPressEvent) => {
+  private readonly _touchableHandleLongPress = (e: IPressEvent) => {
     this.props.onLongPress && this.props.onLongPress(e);
   };
-  private _touchableGetPressRectOffset = (): Insets => {
+  private readonly _touchableGetPressRectOffset = (): Insets => {
     return this.props.pressRetentionOffset || PRESS_RETENTION_OFFSET;
   };
-  private _touchableGetHitSlop = (): Insets => {
+  private readonly _touchableGetHitSlop = (): Insets => {
     return { left: 100, right: 100, top: 100, bottom: 100 };
   };
-  private _touchableGetHighlightDelayMS = (): number => {
+  private readonly _touchableGetHighlightDelayMS = (): number => {
     return this.props.delayLongPressIn || 0;
   };
-  private _touchableGetLongPressDelayMS = (): number => {
+  private readonly _touchableGetLongPressDelayMS = (): number => {
     return this.props.delayLongPress || 500;
   };
-  private _touchableGetPressOutDelayMS = (): number => {
+  private readonly _touchableGetPressOutDelayMS = (): number => {
     return this.props.delayPressOut || 0;
   };
-  private _touchableHandleKeyPress = (ev: IKeyboardEvent) => {
+  private readonly _touchableHandleKeyPress = (ev: IKeyboardEvent) => {
     this.props.onKeyPress && this.props.onKeyPress(ev);
   }
-  private _touchableHandleKeyPressDown = (ev: IKeyboardEvent) => {
+  private readonly _touchableHandleKeyPressDown = (ev: IKeyboardEvent) => {
     this.props.onKeyPressDown && this.props.onKeyPressDown(ev);
   }
-  private _mouseEnter = (): void => {
+  private readonly _mouseEnter = (): void => {
     this.props.onMouseEnter && this.props.onMouseEnter();
     this.setState({ isMouseIn: true });
   };
-  private _mouseLeave = (): void => {
+  private readonly _mouseLeave = (): void => {
     this.props.onMouseLeave && this.props.onMouseLeave();
     this.setState({ isMouseIn: false });
   };
-  private _onFocus = (ev: NativeSyntheticEvent<{}>): void => {
+  private readonly _onFocus = (ev: NativeSyntheticEvent<{}>): void => {
     this.props.onFocus && this.props.onFocus(ev);
     this.setState({ isFocused: true });
   };
-  private _onBlur = (ev: NativeSyntheticEvent<{}>): void => {
+  private readonly _onBlur = (ev: NativeSyntheticEvent<{}>): void => {
     this.props.onBlur && this.props.onBlur(ev);
     this.setState({ isFocused: false });
   };
@@ -281,7 +287,7 @@ class TouchableWin32Highlight extends React.Component<ITouchableWin32HighlightPr
    * funtion passed on to TouchableWin32 and resolved according
    * to the internal state of TouchableWin32).
    */
-  private _generateStyle = (state: ITouchableWin32State): ViewStyle => {
+  private readonly _generateStyle = (state: ITouchableWin32State): ViewStyle => {
     const finalStyle: ViewStyle = {};
     finalStyle.borderColor = state.isFocused ? 'red' : 'blue';
     finalStyle.borderWidth = state.isFocused ? 10 : 5;
@@ -301,6 +307,15 @@ class TouchableWin32Highlight extends React.Component<ITouchableWin32HighlightPr
     return Object.assign({}, this.props.style, finalStyle);
   };
 }
+
+// Demonstrating ref forwarding - forwarding a ref using an innerRef prop on a class component
+const TouchableWin32Highlight = React.forwardRef<TouchableWin32, ITouchableWin32HighlightProps>(
+  (props, ref) => {
+    return (
+      <TouchableWin32HighlightComponent innerRef={ref} {...props} />
+    );
+  }
+);
 
 /**
  * Both examples merely track number of presses
@@ -341,7 +356,7 @@ class TouchableWithoutFeedbackExample extends React.Component<{}, IExampleState>
     );
   }
 
-  private _onPress = (e: IPressEvent) => {
+  private readonly _onPress = () => {
     this.setState({ numberOfPresses: this.state.numberOfPresses + 1 });
   };
 }
@@ -380,7 +395,7 @@ class TouchableHighlightExample extends React.Component<{}, IExampleState> {
    * This is primarily to demonstrate render children as a function
    * of state, here we change text color depending on interaction state.
    */
-  private _getChildrenOfInnerTouchable = (state: ITouchableWin32State) => {
+  private readonly _getChildrenOfInnerTouchable = (state: ITouchableWin32State) => {
     return (
       <ViewWin32
         style={{
@@ -419,28 +434,70 @@ class TouchableHighlightExample extends React.Component<{}, IExampleState> {
     }
   }
 
-  private _onPress = (e: IPressEvent) => {
+  private readonly _onPress = () => {
     this.setState({ numberOfPresses: this.state.numberOfPresses + 1 });
   };
 }
 
+const TouchableFocusExample = () => {
+  const [focused, setFocused] = React.useState(false);
+  const focusableRef = React.useRef<TouchableWin32>(null);
+
+  // onPress callback
+  const focusOnPress = React.useCallback(() => {
+    focusableRef.current && focusableRef.current.focus();
+    focused || setFocused(true);
+  }, [focused]);
+
+  // onFocus and onBlur callbacks
+  const onFocus = React.useCallback(() => {
+    setFocused(true);
+  }, []);
+  const onBlur = React.useCallback(() => {
+    setFocused(false);
+  }, []);
+
+  return (
+    <ViewWin32 style={styles.largeContainer}>
+      <TouchableWin32Highlight onPress={focusOnPress}>
+        <Text>Press me to focus my friend</Text>
+      </TouchableWin32Highlight>
+
+      <TouchableWin32Highlight
+        ref={focusableRef}
+        onFocus={onFocus}
+        onBlur={onBlur}
+      >
+        <Text>{'Focused: ' + focused}</Text>
+      </TouchableWin32Highlight>
+    </ViewWin32>
+  );
+}
+
 export const displayName = 'TouchableWin32 Examples';
-export const title = '<TouchableWin32>';
+export const title = 'TouchableWin32';
 export const description = 'Demonstration of touchable + focus + hover behavior all in one component';
 
 export const examples = [
-    {
-      title: 'TouchableWithoutFeedback Example',
-      description: 'A simple example implementation of without feedback behavior',
-      render(): JSX.Element {
-        return <TouchableWithoutFeedbackExample />;
-      },
+  {
+    title: 'TouchableWithoutFeedback Example',
+    description: 'A simple example implementation of without feedback behavior',
+    render(): JSX.Element {
+      return <TouchableWithoutFeedbackExample />;
     },
-    {
-      title: 'TouchableHighlight Example',
-      description: 'A simple example implementation of highlight behavior',
-      render(): JSX.Element {
-        return <TouchableHighlightExample />;
-      },
+  },
+  {
+    title: 'TouchableHighlight Example',
+    description: 'A simple example implementation of highlight behavior',
+    render(): JSX.Element {
+      return <TouchableHighlightExample />;
     },
-  ];
+  },
+  {
+    title: 'Imperative Focus on TouchableWin32 Example',
+    description: 'A simple example implementation of imperative focus behavior',
+    render(): JSX.Element {
+      return <TouchableFocusExample />;
+    },
+  }
+];

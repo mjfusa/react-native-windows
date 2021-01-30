@@ -17,13 +17,14 @@ import {
 
 import {
   MockFile,
-  MockOverrideFileRepository,
   MockReactFileRepository,
+  MockWritableFileRepository,
 } from './MockFileRepository';
 
 import Manifest from '../Manifest';
 import {OverrideFactoryImpl} from '../OverrideFactory';
 import {hashContent} from '../Hash';
+import {normalizePath} from '../PathUtils';
 
 const reactFiles: Array<MockFile> = [
   {
@@ -59,10 +60,18 @@ const overrideFiles: Array<MockFile> = [
     content:
       "Cause honey I'll come get my things, but I can't let go I'm waiting for it, the fall of civilization as we know it",
   },
+  {
+    filename: 'overrides.json',
+    content: 'Manifest validation should ignore my existence',
+  },
+  {
+    filename: 'node_modules\\foo\\index.js',
+    content: 'Manifest validation should ignore my existence as well',
+  },
 ];
 
 const reactRepo = new MockReactFileRepository(reactFiles);
-const ovrRepo = new MockOverrideFileRepository(overrideFiles);
+const ovrRepo = new MockWritableFileRepository(overrideFiles);
 
 test('constructor - Duplicate Override Names', () => {
   expect(
@@ -90,7 +99,7 @@ test('validate - Empty Manifest', async () => {
   const manifest = new Manifest([]);
 
   const errors = await manifest.validate(
-    new MockOverrideFileRepository([]),
+    new MockWritableFileRepository([]),
     reactRepo,
   );
   expect(errors).toEqual([]);
@@ -115,7 +124,10 @@ test('validate - Missing Override', async () => {
 
   const errors = await manifest.validate(ovrRepo, reactRepo);
   expect(errors).toEqual([
-    {type: 'missingFromManifest', overrideName: 'bbb\\ccc.win32.js'},
+    {
+      type: 'missingFromManifest',
+      overrideName: normalizePath('bbb\\ccc.win32.js'),
+    },
   ]);
 });
 
@@ -129,7 +141,10 @@ test('validate - Extra Override', async () => {
 
   const errors = await manifest.validate(ovrRepo, reactRepo);
   expect(errors).toEqual([
-    {type: 'overrideNotFound', overrideName: 'bbb\\ddd.win32.js'},
+    {
+      type: 'overrideNotFound',
+      overrideName: normalizePath('bbb\\ddd.win32.js'),
+    },
   ]);
 });
 
@@ -151,6 +166,110 @@ test('validate - Multiple Valid Types', async () => {
     }),
     new PlatformOverride({file: overrideFiles[2].filename}),
   ]);
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([]);
+});
+
+test('validate - Single Include Pattern', async () => {
+  const manifest = new Manifest(
+    [
+      new PlatformOverride({file: 'aaa\\aaa.windows.js'}),
+      new PlatformOverride({file: 'aaa\\bbb.windows.js'}),
+    ],
+    {
+      includePatterns: ['**/*.windows.js'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([]);
+});
+
+test('validate - Multiple Include Pattern', async () => {
+  const manifest = new Manifest(
+    [
+      new PlatformOverride({file: 'aaa\\aaa.windows.js'}),
+      new PlatformOverride({file: 'bbb\\ccc.win32.js'}),
+    ],
+    {
+      includePatterns: ['aaa/aaa*', 'bbb/ccc*'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([]);
+});
+
+test('validate - Include Catches Errors', async () => {
+  const manifest = new Manifest(
+    [new PlatformOverride({file: 'bbb\\ccc.win32.js'})],
+    {
+      includePatterns: ['aaa/aaa*', 'bbb/ccc*'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([
+    {
+      overrideName: normalizePath('aaa\\aaa.windows.js'),
+      type: 'missingFromManifest',
+    },
+  ]);
+});
+
+test('validate - Single Exclude Pattern', async () => {
+  const manifest = new Manifest(
+    [
+      new PlatformOverride({file: 'aaa\\aaa.windows.js'}),
+      new PlatformOverride({file: 'aaa\\bbb.windows.js'}),
+    ],
+    {
+      excludePatterns: ['**/*.win32.js'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([]);
+});
+
+test('validate - Multiple Exclude Patterns', async () => {
+  const manifest = new Manifest(
+    [new PlatformOverride({file: 'aaa\\aaa.windows.js'})],
+    {
+      excludePatterns: ['**/*.win32.js', '**/bbb*'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([]);
+});
+
+test('validate - Exclude Catches Errors', async () => {
+  const manifest = new Manifest(
+    [new PlatformOverride({file: 'aaa\\aaa.windows.js'})],
+    {
+      excludePatterns: ['**/*.win32.js'],
+    },
+  );
+
+  const errors = await manifest.validate(ovrRepo, reactRepo);
+  expect(errors).toEqual([
+    {
+      overrideName: normalizePath('aaa\\bbb.windows.js'),
+      type: 'missingFromManifest',
+    },
+  ]);
+});
+
+test('validate - Include and Exclude Patterns', async () => {
+  const manifest = new Manifest(
+    [new PlatformOverride({file: 'aaa\\aaa.windows.js'})],
+    {
+      includePatterns: ['**/*.windows.js'],
+      excludePatterns: ['**/bbb*'],
+    },
+  );
 
   const errors = await manifest.validate(ovrRepo, reactRepo);
   expect(errors).toEqual([]);
@@ -254,8 +373,11 @@ test('markUpToDate - Simple', async () => {
   expect(newOverride.baseHash).toBe(hashContent(reactFiles[0].content));
 });
 
-test('Serialization Round-Trip', () => {
+test('Serialization (Indivudal Base) Round-Trip', () => {
   const serializedManifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
         type: 'platform',
@@ -275,7 +397,7 @@ test('Serialization Round-Trip', () => {
         baseFile: 'defg.js',
         baseVersion: '0.65.3',
         baseHash: 'sdfssfsfsf',
-        issue: 'LEGACY_FIXME',
+        issue: undefined,
       },
       {
         type: 'copy',
@@ -293,8 +415,11 @@ test('Serialization Round-Trip', () => {
   );
 });
 
-test('String Exact Serialization Round-Trip', () => {
-  const serializedManifest: any = {
+test('Serialization (Default Base) Round-Trip', () => {
+  const serializedManifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: '0.68.7',
     overrides: [
       {
         type: 'platform',
@@ -304,7 +429,88 @@ test('String Exact Serialization Round-Trip', () => {
         type: 'derived',
         file: 'abcd.windows.js',
         baseFile: 'abcd.js',
-        baseVersion: '0.68.7',
+        baseVersion: undefined,
+        baseHash: 'gksdpofgkesgpofk',
+        issue: undefined,
+      },
+      {
+        type: 'patch',
+        file: 'defg.windows.js',
+        baseFile: 'defg.js',
+        baseVersion: undefined,
+        baseHash: 'sdfssfsfsf',
+        issue: undefined,
+      },
+      {
+        type: 'copy',
+        file: 'ffgg.windows.js',
+        baseFile: 'ffgg.android.js',
+        baseVersion: undefined,
+        baseHash: 'sdfssfsfsf',
+        issue: 1234,
+      },
+    ],
+  };
+
+  expect(Manifest.fromSerialized(serializedManifest).serialize()).toEqual(
+    serializedManifest,
+  );
+});
+
+test('Serialization (Differing Bases) Round-Trip', () => {
+  const serializedManifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: '0.68.7',
+    overrides: [
+      {
+        type: 'platform',
+        file: 'aaa.js',
+      },
+      {
+        type: 'derived',
+        file: 'abcd.windows.js',
+        baseFile: 'abcd.js',
+        baseVersion: undefined,
+        baseHash: 'gksdpofgkesgpofk',
+        issue: undefined,
+      },
+      {
+        type: 'patch',
+        file: 'defg.windows.js',
+        baseFile: 'defg.js',
+        baseVersion: '0.64.3',
+        baseHash: 'sdfssfsfsf',
+        issue: undefined,
+      },
+      {
+        type: 'copy',
+        file: 'ffgg.windows.js',
+        baseFile: 'ffgg.android.js',
+        baseVersion: undefined,
+        baseHash: 'sdfssfsfsf',
+        issue: 1234,
+      },
+    ],
+  };
+
+  expect(Manifest.fromSerialized(serializedManifest).serialize()).toEqual(
+    serializedManifest,
+  );
+});
+
+test('String Exact Serialization Round-Trip', () => {
+  const serializedManifest: any = {
+    baseVersion: '0.68.7',
+    overrides: [
+      {
+        type: 'platform',
+        file: 'aaa.js',
+      },
+      {
+        type: 'derived',
+        file: 'abcd.windows.js',
+        baseFile: 'abcd.js',
         baseHash: 'gksdpofgkesgpofk',
       },
       {
@@ -313,8 +519,30 @@ test('String Exact Serialization Round-Trip', () => {
         baseFile: 'defg.js',
         baseVersion: '0.65.3',
         baseHash: 'sdfssfsfsf',
-        issue: 'LEGACY_FIXME',
+        issue: undefined,
       },
+      {
+        type: 'copy',
+        file: 'ffgg.windows.js',
+        baseFile: 'ffgg.android.js',
+        baseHash: 'sdfssfsfsf',
+        issue: 1234,
+      },
+    ],
+  };
+
+  const manifestString = JSON.stringify(serializedManifest);
+  const manifest = Manifest.fromSerialized(
+    Serialized.parseManifest(manifestString),
+  );
+  expect(JSON.stringify(manifest.serialize())).toEqual(manifestString);
+});
+
+test('String Exact Serialization Round-Trip (With Patterns)', () => {
+  const serializedManifest: any = {
+    includePatterns: ['src/**'],
+    excludePatterns: ['**/*.png'],
+    overrides: [
       {
         type: 'copy',
         file: 'ffgg.windows.js',

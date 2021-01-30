@@ -18,7 +18,6 @@
 
 using namespace winrt;
 using namespace Windows::ApplicationModel;
-using namespace Windows::ApplicationModel::Activation;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
 using namespace Windows::UI::Core;
@@ -100,16 +99,23 @@ void ReactApplication::JavaScriptBundleFile(hstring const &value) noexcept {
   InstanceSettings().JavaScriptBundleFile(value);
 }
 
-void ReactApplication::OnActivated(IActivatedEventArgs const &e) {
-  if (e.Kind() == ActivationKind::Protocol) {
-    auto protocolActivatedEventArgs{e.as<ProtocolActivatedEventArgs>()};
+void ReactApplication::OnActivated(Windows::ApplicationModel::Activation::IActivatedEventArgs const &e) {
+  if (e.Kind() == Windows::ApplicationModel::Activation::ActivationKind::Protocol) {
+    auto protocolActivatedEventArgs{e.as<Windows::ApplicationModel::Activation::ProtocolActivatedEventArgs>()};
     react::uwp::LinkingManagerModule::OpenUri(protocolActivatedEventArgs.Uri());
-    this->OnCreate(e);
   }
+  this->OnCreate(e);
 }
 
-void ReactApplication::OnLaunched(LaunchActivatedEventArgs const &e) {
-  base_type::OnLaunched(e);
+void ReactApplication::OnLaunched(activation::LaunchActivatedEventArgs const &e_) {
+  base_type::OnLaunched(e_);
+  Windows::ApplicationModel::Activation::LaunchActivatedEventArgs e =
+#ifdef USE_WINUI3
+      e_.UWPLaunchActivatedEventArgs();
+#else
+      e_;
+#endif // USE_WINUI3
+
   this->OnCreate(e);
 }
 
@@ -149,22 +155,14 @@ void ApplyArguments(ReactNative::ReactNativeHost const &host, std::wstring const
 /// specific file.
 /// </summary>
 /// <param name="e">Details about the launch request and process.</param>
-void ReactApplication::OnCreate(IActivatedEventArgs const &e) {
-#if defined _DEBUG
-  if (IsDebuggerPresent()) {
-    this->DebugSettings().EnableFrameRateCounter(TRUE);
-
-    SystemNavigationManager::GetForCurrentView().AppViewBackButtonVisibility(AppViewBackButtonVisibility::Visible);
-  }
-#endif
-
+void ReactApplication::OnCreate(Windows::ApplicationModel::Activation::IActivatedEventArgs const &e) {
   bool isPrelaunchActivated = false;
-  if (auto prelauchActivatedArgs = e.try_as<IPrelaunchActivatedEventArgs>()) {
+  if (auto prelauchActivatedArgs = e.try_as<Windows::ApplicationModel::Activation::IPrelaunchActivatedEventArgs>()) {
     isPrelaunchActivated = prelauchActivatedArgs.PrelaunchActivated();
   }
 
   hstring args;
-  if (auto lauchActivatedArgs = e.try_as<ILaunchActivatedEventArgs>()) {
+  if (auto lauchActivatedArgs = e.try_as<activation::ILaunchActivatedEventArgs>()) {
     args = lauchActivatedArgs.Arguments();
   }
 
@@ -176,14 +174,15 @@ void ReactApplication::OnCreate(IActivatedEventArgs const &e) {
 
   // Do not repeat app initialization when the Window already has content,
   // just ensure that the window is active
-  if (rootFrame == nullptr) {
+  bool previouslyInitialized = (rootFrame != nullptr);
+  if (!previouslyInitialized) {
     // Create a Frame to act as the navigation context and associate it with
     // a SuspensionManager key
     rootFrame = Frame();
 
     rootFrame.NavigationFailed({this, &ReactApplication::OnNavigationFailed});
 
-    if (e.PreviousExecutionState() == ApplicationExecutionState::Terminated) {
+    if (e.PreviousExecutionState() == Windows::ApplicationModel::Activation::ApplicationExecutionState::Terminated) {
       // Restore the saved session state only when appropriate, scheduling the
       // final launch steps after the restore is complete
     }
@@ -192,8 +191,10 @@ void ReactApplication::OnCreate(IActivatedEventArgs const &e) {
 
   ApplyArguments(Host(), args.c_str());
 
-  // Nudge the ReactNativeHost to create the instance and wrapping context
-  Host().ReloadInstance();
+  if (!previouslyInitialized) {
+    // Nudge the ReactNativeHost to create the instance and wrapping context
+    Host().ReloadInstance();
+  }
 
   Window::Current().Activate();
 }

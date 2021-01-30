@@ -1,20 +1,16 @@
 /**
  * Copyright (c) Microsoft Corporation.
  * Licensed under the MIT License.
- * 
+ *
  * @format
  * @ts-check
  */
 
-module.exports = { 
-  extends: [
-    "@react-native-community",
-
-    // @react-native-community doesn't seem to include the
-    // eslint-config-prettier blacklist which can sometimes lead to conflicting
-    // rules. Make sure to include the exclusions here.
-    "prettier",
-  ],
-  rules:{ 
-    "sort-imports": "warn",
-}};
+module.exports = {
+  extends: ['@rnw-scripts'],
+  rules: {
+    'sort-imports': 'error',
+  },
+  ignorePatterns: ['src/e2etest/collateral/**'],
+  parserOptions: {tsconfigRootDir: __dirname},
+};

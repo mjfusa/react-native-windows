@@ -5,38 +5,12 @@
  * @ts-check
  */
 
-const {
-  task,
-  series,
-  parallel,
-  option,
-  argv,
-  tscTask,
-  eslintTask,
-} = require('just-scripts');
+const {task, series} = require('just-scripts');
 const fs = require('fs');
-const path = require('path');
 const {execSync} = require('child_process');
 
-option('production');
-option('clean');
-
-task('eslint', () => {
-  return eslintTask();
-});
-task('eslint:fix', () => {
-  return eslintTask({fix: true});
-});
-task('ts', () => {
-  return tscTask({
-    pretty: true,
-    ...(argv().production && {
-      inlineSources: true,
-    }),
-    target: 'es6',
-    module: 'commonjs',
-  });
-});
+// Use the shared base configuration
+require('@rnw-scripts/just-task');
 
 task('codegen', () => {
   execSync(
@@ -44,19 +18,9 @@ task('codegen', () => {
   );
 });
 
-function ensureDirectoryExists(filePath) {
-  const dir = path.dirname(filePath);
-  if (!fs.existsSync(dir)) {
-    ensureDirectoryExists(dir);
-    fs.mkdirSync(dir);
-  }
-}
-
 task('prepareBundle', () => {
-  ensureDirectoryExists('windows/SampleAppCS/Bundle');
-  ensureDirectoryExists('windows/SampleAppCPP/Bundle');
+  fs.mkdirSync('windows/SampleAppCS/Bundle', {recursive: true});
+  fs.mkdirSync('windows/SampleAppCPP/Bundle', {recursive: true});
 });
 
-task('build', parallel('ts', 'codegen'));
-task('lint', series('eslint'));
-task('lint:fix', series('eslint:fix'));
+task('build', series('codegen'));

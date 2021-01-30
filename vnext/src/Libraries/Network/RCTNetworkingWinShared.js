@@ -3,35 +3,43 @@
  * Licensed under the MIT License.
  *
  * @format
- * @flow
+ * @flow strict-local
  */
 
 'use strict';
 
-const NativeEventEmitter = require('../EventEmitter/NativeEventEmitter');
+import NativeEventEmitter from '../EventEmitter/NativeEventEmitter';
+import type {NativeResponseType} from './XMLHttpRequest';
+import convertRequestBody from './convertRequestBody';
+
 const RCTNetworkingNative = require('../BatchedBridge/NativeModules')
-  .Networking;
-const convertRequestBody = require('./convertRequestBody');
+  .Networking; // [Windows]
 
 import type {RequestBody} from './convertRequestBody';
 
-import type {NativeResponseType} from './XMLHttpRequest';
-
-class RCTNetworking extends NativeEventEmitter {
+// FIXME: use typed events
+class RCTNetworking extends NativeEventEmitter<$FlowFixMe> {
   constructor() {
-    super(RCTNetworkingNative);
+    const disableCallsIntoModule =
+      typeof global.__disableRCTNetworkingExtraneousModuleCalls === 'function'
+        ? global.__disableRCTNetworkingExtraneousModuleCalls()
+        : false;
+
+    super(RCTNetworkingNative, {
+      __SECRET_DISABLE_CALLS_INTO_MODULE_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: disableCallsIntoModule,
+    });
   }
 
   sendRequest(
     method: string,
     trackingName: string,
     url: string,
-    headers: Object,
+    headers: {...},
     data: RequestBody,
     responseType: NativeResponseType,
     incrementalUpdates: boolean,
     timeout: number,
-    callback: (requestId: number) => any,
+    callback: (requestId: number) => void,
     withCredentials: boolean,
   ) {
     const body = convertRequestBody(data);
@@ -54,7 +62,7 @@ class RCTNetworking extends NativeEventEmitter {
     RCTNetworkingNative.abortRequest(requestId);
   }
 
-  clearCookies(callback: (result: boolean) => any) {
+  clearCookies(callback: (result: boolean) => void) {
     RCTNetworkingNative.clearCookies(callback);
   }
 }

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const rnwPath = __dirname;
 const {resolve} = require('metro-resolver');
+const exclusionList = require('metro-config/src/defaults/exclusionList');
 
 function reactNativePlatformResolver(platformImplementations) {
   return (context, _realModuleName, platform, moduleName) => {
@@ -40,15 +41,17 @@ module.exports = {
   ],
 
   resolver: {
-    // We need a custom resolveRequest right now since our integration tests use a "windesktop" platform thats specific to integration tests.
     resolveRequest: reactNativePlatformResolver({
-      windesktop: 'react-native-windows',
       windows: 'react-native-windows',
     }),
     extraNodeModules: {
       // Redirect react-native-windows to this folder
       'react-native-windows': rnwPath,
     },
+    blockList: exclusionList([
+      // Avoid error EBUSY: resource busy or locked, open '...\vnext\msbuild.ProjectImports.zip' when building 'vnext\Microsoft.ReactNative.sln' with '/bl'
+      /.*\.ProjectImports\.zip/,
+    ]),
   },
 
   transformer: {

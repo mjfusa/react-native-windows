@@ -1,17 +1,16 @@
 // @ts-check
-const projectConfig = require('./local-cli/config/projectConfig');
-const dependencyConfig = require('./local-cli/config/dependencyConfig');
+require('source-map-support').install();
+
+const cli = require('@react-native-windows/cli');
 
 module.exports = {
-    // **** This section defined commands and options on how to provide the windows platform to external applications
-    commands: [
-      require('./local-cli/runWindows/runWindows'),
-    ],
+    // **** This section defined commands and options on how to provide the Windows platform to external applications
+    commands: cli.commands,
     platforms: {
       windows: {
         linkConfig: () => null,
-        projectConfig: projectConfig.projectConfigWindows,
-        dependencyConfig: dependencyConfig.dependencyConfigWindows,
+        projectConfig: cli.projectConfig,
+        dependencyConfig: cli.dependencyConfig,
         npmPackageName: 'react-native-windows',
       },
     },

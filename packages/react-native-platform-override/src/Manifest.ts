@@ -6,33 +6,61 @@
  */
 
 import * as Serialized from './Serialized';
-
 import * as _ from 'lodash';
+import * as path from 'path';
 
 import Override, {deserializeOverride} from './Override';
-import {OverrideFileRepository, ReactFileRepository} from './FileRepository';
+import {ReactFileRepository, WritableFileRepository} from './FileRepository';
 import OverrideFactory from './OverrideFactory';
 import {ValidationError} from './ValidationStrategy';
+import {eachLimit} from 'async';
+import {normalizePath} from './PathUtils';
 
 /**
  * Represents a collection of overrides listed in an on-disk manifest. Allows
  * performing aggregate operations on the overrides.
  */
 export default class Manifest {
-  private overrides: Array<Override>;
+  private readonly includePatterns?: string[];
+  private readonly excludePatterns?: string[];
+  private baseVersion?: string;
+  private readonly overrides: Override[];
 
-  constructor(overrides: Array<Override>) {
+  /**
+   * Construct the manifest
+   *
+   * @param overrides List of overrides to evaluate
+   * @param opts Allows specifying globs to include or exclude paths to enforce
+   * exist in the manifest
+   */
+  constructor(
+    overrides: Override[],
+    opts: {
+      includePatterns?: string[];
+      excludePatterns?: string[];
+      baseVersion?: string;
+    } = {},
+  ) {
     const uniquelyNamed = _.uniqBy(overrides, ovr => ovr.name());
     if (uniquelyNamed.length !== overrides.length) {
       throw new Error('Cannot construct a manifest with duplicate overrides');
     }
 
+    this.includePatterns = opts.includePatterns;
+    this.excludePatterns = opts.excludePatterns;
+    this.baseVersion = opts.baseVersion;
     this.overrides = _.clone(overrides);
   }
 
   static fromSerialized(man: Serialized.Manifest): Manifest {
-    const overrides = man.overrides.map(deserializeOverride);
-    return new Manifest(overrides);
+    const overrides = man.overrides.map(ovr =>
+      deserializeOverride(ovr, {defaultBaseVersion: man.baseVersion}),
+    );
+    return new Manifest(overrides, {
+      includePatterns: man.includePatterns,
+      excludePatterns: man.excludePatterns,
+      baseVersion: man.baseVersion,
+    });
   }
 
   /**
@@ -41,16 +69,23 @@ export default class Manifest {
    * with upstream.
    */
   async validate(
-    overrideRepo: OverrideFileRepository,
+    overrideRepo: WritableFileRepository,
     reactRepo: ReactFileRepository,
-  ): Promise<Array<ValidationError>> {
+  ): Promise<ValidationError[]> {
     const errors: ValidationError[] = [];
 
-    const overrideFiles = await overrideRepo.listFiles();
-    const missingFromManifest = overrideFiles.filter(
-      file => !this.overrides.some(override => override.includesFile(file)),
-    );
+    const globs = [
+      ...(this.includePatterns || ['**']),
+      ...(this.excludePatterns || []).map(p => '!' + p),
+    ];
 
+    const overrideFiles = await overrideRepo.listFiles(globs);
+    const missingFromManifest = overrideFiles.filter(
+      file =>
+        file !== 'overrides.json' &&
+        path.relative('node_modules', file).startsWith('..') &&
+        !this.overrides.some(override => override.includesFile(file)),
+    );
     for (const missingFile of missingFromManifest) {
       errors.push({type: 'missingFromManifest', overrideName: missingFile});
     }
@@ -59,11 +94,14 @@ export default class Manifest {
       ovr.validationStrategies(),
     );
 
-    for (const task of validationTasks) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    await eachLimit(validationTasks, 30, async task => {
       errors.push(...(await task.validate(overrideRepo, reactRepo)));
-    }
+    });
 
-    return errors;
+    return errors.sort((a, b) =>
+      a.overrideName.localeCompare(b.overrideName, 'en'),
+    );
   }
 
   /**
@@ -81,7 +119,9 @@ export default class Manifest {
    * Whether the manifest contains a given override
    */
   hasOverride(overrideName: string): boolean {
-    return this.overrides.some(ovr => ovr.name() === overrideName);
+    return this.overrides.some(
+      ovr => ovr.name() === normalizePath(overrideName),
+    );
   }
 
   /**
@@ -132,10 +172,29 @@ export default class Manifest {
    */
   serialize(): Serialized.Manifest {
     return {
+      includePatterns: this.includePatterns,
+      excludePatterns: this.excludePatterns,
+      baseVersion: this.baseVersion,
       overrides: this.overrides
         .sort((a, b) => a.name().localeCompare(b.name(), 'en'))
-        .map(override => override.serialize()),
+        .map(override =>
+          override.serialize({defaultBaseVersion: this.baseVersion}),
+        ),
     };
+  }
+
+  /**
+   * Returns the overrides in the manfest
+   */
+  listOverrides(): Override[] {
+    return _.clone(this.overrides);
+  }
+
+  /**
+   * Set the default baseVersion for the manifest
+   */
+  setBaseVersion(baseVersion?: string) {
+    this.baseVersion = baseVersion;
   }
 
   /**
@@ -143,6 +202,8 @@ export default class Manifest {
    * @returns -1 if it cannot be found
    */
   private findOverrideIndex(overrideName: string): number {
-    return this.overrides.findIndex(ovr => ovr.name() === overrideName);
+    return this.overrides.findIndex(
+      ovr => ovr.name() === normalizePath(overrideName),
+    );
   }
 }

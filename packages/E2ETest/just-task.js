@@ -5,35 +5,11 @@
  * @ts-check
  */
 
-const {
-  task,
-  series,
-  option,
-  argv,
-  tscTask,
-  eslintTask,
-} = require('just-scripts');
+const { task, tscTask } = require('just-scripts');
 const fs = require('fs');
 
-option('production');
-option('clean');
-
-task('eslint', () => {
-  return eslintTask();
-});
-task('eslint:fix', () => {
-  return eslintTask({ fix: true });
-});
-task('ts', () => {
-  return tscTask({
-    pretty: true,
-    ...(argv().production && {
-      inlineSources: true,
-    }),
-    target: 'es6',
-    module: 'commonjs',
-  });
-});
+// Use the shared base configuration
+require('@rnw-scripts/just-task');
 
 task('prepareBundle', () => {
   const file = 'windows/ReactUWPTestApp/Bundle';
@@ -42,6 +18,4 @@ task('prepareBundle', () => {
   }
 });
 
-task('build', series('ts'));
-task('lint', series('eslint'));
-task('lint:fix', series('eslint:fix'));
+task('ts', tscTask({ noEmit: true }));

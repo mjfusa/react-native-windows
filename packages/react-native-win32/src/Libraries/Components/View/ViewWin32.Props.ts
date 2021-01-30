@@ -97,6 +97,7 @@ export type AccessibilityAnnotationInfo = Readonly<{
   typeName?: string;
   author?: string;
   dateTime?: string;
+  target?: string;
 }>;
 
 export type AccessibilityActionName =
@@ -107,7 +108,7 @@ export type AccessibilityActionName =
   | 'Expand'
   | 'Collapse';
 
-  export type Cursor =
+export type Cursor =
   | 'auto'
   | 'default'
   | 'pointer'
@@ -132,7 +133,7 @@ export type AccessibilityActionEvent = RN.NativeSyntheticEvent<
   }>
   >;
 
-export type AccessibilityState = RN.AccessibilityState & {multiselectable?: boolean, required?: boolean};
+export type AccessibilityState = RN.AccessibilityState & { multiselectable?: boolean, required?: boolean };
 
 export type SharedAccessibilityPropsIOSandWin32 = {
   onAccessibilityTap?: () => void;
@@ -165,8 +166,8 @@ export type BasePropsWin32 = {
   * Defined as a reference to another DOM element inheriting from the primary base classes of React-Native elements.
   * The reference will be converted to a native reference (tag) before passing to the native platform.
   */
- accessibilityDescribedBy?: React.RefObject<any>;
- accessibilityLabeledBy?: React.RefObject<any>;
+  accessibilityDescribedBy?: React.RefObject<any>;
+  accessibilityLabeledBy?: React.RefObject<any>;
 };
 
 export type ViewWin32OmitTypes = RN.ViewPropsAndroid &
@@ -179,11 +180,8 @@ export type ViewWin32OmitTypes = RN.ViewPropsAndroid &
  * Properties for ViewWin32 component
  */
 export interface IViewWin32Props extends Omit<RN.ViewProps, ViewWin32OmitTypes>, BasePropsWin32 {
-  // tslint:disable-next-line no-reserved-keywords -- type name matching facebook implementation
   type?: React.ElementType;
   children?: React.ReactNode;
-  /** @Deprecated Use focusable instead.*/
-  acceptsKeyboardFocus?: boolean;
   accessibilityActions?: ReadonlyArray<AccessibilityActionInfo>;
   /**
    * Tells a person using a screen reader what kind of annotation they
@@ -193,6 +191,12 @@ export interface IViewWin32Props extends Omit<RN.ViewProps, ViewWin32OmitTypes>,
    * Note: If typeID is 'Unknown', a typeName must be provided.
    */
   accessibilityAnnotation?: AccessibilityAnnotationInfo;
+  /**
+  * accessibilityDescription provides more detailed information specific to the element (i.e. last edit date, full location for a file)
+  * while accessibilityHint provides infomation on what will happen when they perform an action.
+  *
+  */
+  accessibilityDescription?: string;
   accessibilityLevel?: number;
   accessibilityPositionInSet?: number;
 

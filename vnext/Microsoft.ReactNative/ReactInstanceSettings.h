@@ -3,11 +3,48 @@
 
 #pragma once
 
+#include "InstanceCreatedEventArgs.g.h"
+#include "InstanceDestroyedEventArgs.g.h"
+#include "InstanceLoadedEventArgs.g.h"
 #include "ReactInstanceSettings.g.h"
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.h>
+#include "React.h"
+#include "ReactPropertyBag.h"
 
 namespace winrt::Microsoft::ReactNative::implementation {
+
+struct InstanceCreatedEventArgs : InstanceCreatedEventArgsT<InstanceCreatedEventArgs> {
+  InstanceCreatedEventArgs() = default;
+  InstanceCreatedEventArgs(Mso::CntPtr<Mso::React::IReactContext> &&context);
+
+  winrt::Microsoft::ReactNative::IReactContext Context() noexcept;
+
+ private:
+  winrt::Microsoft::ReactNative::IReactContext m_context;
+};
+
+struct InstanceLoadedEventArgs : InstanceLoadedEventArgsT<InstanceLoadedEventArgs> {
+  InstanceLoadedEventArgs() = default;
+  InstanceLoadedEventArgs(Mso::CntPtr<Mso::React::IReactContext> &&context, bool failed);
+
+  winrt::Microsoft::ReactNative::IReactContext Context() noexcept;
+  bool Failed() noexcept;
+
+ private:
+  winrt::Microsoft::ReactNative::IReactContext m_context;
+  bool m_failed;
+};
+
+struct InstanceDestroyedEventArgs : InstanceDestroyedEventArgsT<InstanceDestroyedEventArgs> {
+  InstanceDestroyedEventArgs() = default;
+  InstanceDestroyedEventArgs(Mso::CntPtr<Mso::React::IReactContext> &&context);
+
+  winrt::Microsoft::ReactNative::IReactContext Context() noexcept;
+
+ private:
+  winrt::Microsoft::ReactNative::IReactContext m_context;
+};
 
 struct ReactInstanceSettings : ReactInstanceSettingsT<ReactInstanceSettings> {
   ReactInstanceSettings() noexcept;
@@ -31,7 +68,7 @@ struct ReactInstanceSettings : ReactInstanceSettingsT<ReactInstanceSettings> {
 
   //! Should the instance run in a remote environment such as within a browser
   //! By default, this is using a browser navigated to  http://localhost:8081/debugger-ui served
-  //! by Metro/Haul. Debugging will start as soon as the react native instance is loaded.
+  //! by Metro/Haul. Debugging will start as soon as the React Native instance is loaded.
   bool UseWebDebugger() noexcept;
   void UseWebDebugger(bool value) noexcept;
 
@@ -96,6 +133,34 @@ struct ReactInstanceSettings : ReactInstanceSettingsT<ReactInstanceSettings> {
   uint16_t SourceBundlePort() noexcept;
   void SourceBundlePort(uint16_t value) noexcept;
 
+  JSIEngine JSIEngineOverride() noexcept;
+  void JSIEngineOverride(JSIEngine value) noexcept;
+
+  winrt::event_token InstanceCreated(
+      Windows::Foundation::EventHandler<winrt::Microsoft::ReactNative::InstanceCreatedEventArgs> const
+          &handler) noexcept;
+  void InstanceCreated(winrt::event_token const &token) noexcept;
+
+  winrt::event_token InstanceLoaded(
+      Windows::Foundation::EventHandler<winrt::Microsoft::ReactNative::InstanceLoadedEventArgs> const
+          &handler) noexcept;
+  void InstanceLoaded(winrt::event_token const &token) noexcept;
+
+  winrt::event_token InstanceDestroyed(
+      Windows::Foundation::EventHandler<winrt::Microsoft::ReactNative::InstanceDestroyedEventArgs> const
+          &handler) noexcept;
+  void InstanceDestroyed(winrt::event_token const &token) noexcept;
+
+  static void RaiseInstanceCreated(
+      IReactNotificationService const &notificationService,
+      winrt::Microsoft::ReactNative::InstanceCreatedEventArgs const &args) noexcept;
+  static void RaiseInstanceLoaded(
+      IReactNotificationService const &notificationService,
+      winrt::Microsoft::ReactNative::InstanceLoadedEventArgs const &args) noexcept;
+  static void RaiseInstanceDestroyed(
+      IReactNotificationService const &notificationService,
+      winrt::Microsoft::ReactNative::InstanceDestroyedEventArgs const &args) noexcept;
+
  private:
   IReactPropertyBag m_properties{ReactPropertyBagHelper::CreatePropertyBag()};
   IReactNotificationService m_notifications{ReactNotificationServiceHelper::CreateNotificationService()};
@@ -107,13 +172,20 @@ struct ReactInstanceSettings : ReactInstanceSettingsT<ReactInstanceSettings> {
   bool m_enableJITCompilation{true};
   bool m_enableByteCodeCaching{false};
   hstring m_byteCodeFileUri{};
-  hstring m_debugHost{};
   hstring m_debugBundlePath{};
   hstring m_bundleRootPath{};
   uint16_t m_debuggerPort{9229};
   IRedBoxHandler m_redBoxHandler{nullptr};
   hstring m_sourceBundleHost{};
   uint16_t m_sourceBundlePort{0};
+
+#if USE_HERMES
+  JSIEngine m_jSIEngineOverride{JSIEngine::Hermes};
+#elif USE_V8
+  JSIEngine m_jSIEngineOverride{JSIEngine::V8};
+#else
+  JSIEngine m_jSIEngineOverride{JSIEngine::Chakra};
+#endif
 };
 
 } // namespace winrt::Microsoft::ReactNative::implementation
@@ -191,14 +263,6 @@ inline void ReactInstanceSettings::ByteCodeFileUri(hstring const &value) noexcep
   m_byteCodeFileUri = value;
 }
 
-inline hstring ReactInstanceSettings::DebugHost() noexcept {
-  return m_debugHost;
-}
-
-inline void ReactInstanceSettings::DebugHost(hstring const &value) noexcept {
-  m_debugHost = value;
-}
-
 inline hstring ReactInstanceSettings::DebugBundlePath() noexcept {
   return m_debugBundlePath;
 }
@@ -245,6 +309,14 @@ inline uint16_t ReactInstanceSettings::SourceBundlePort() noexcept {
 
 inline void ReactInstanceSettings::SourceBundlePort(uint16_t value) noexcept {
   m_sourceBundlePort = value;
+}
+
+inline JSIEngine ReactInstanceSettings::JSIEngineOverride() noexcept {
+  return m_jSIEngineOverride;
+}
+
+inline void ReactInstanceSettings::JSIEngineOverride(JSIEngine value) noexcept {
+  m_jSIEngineOverride = value;
 }
 
 } // namespace winrt::Microsoft::ReactNative::implementation

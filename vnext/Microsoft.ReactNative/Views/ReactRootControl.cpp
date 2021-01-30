@@ -6,7 +6,7 @@
 #include "ReactRootControl.h"
 
 #include <CxxMessageQueue.h>
-#include <ReactUWP/InstanceFactory.h>
+#include <InstanceFactory.h>
 #include <Utils/ValueUtils.h>
 #include "Unicode.h"
 
@@ -33,12 +33,13 @@
 #include <UI.Xaml.Controls.h>
 #include <UI.Xaml.Input.h>
 #include <UI.Xaml.Markup.h>
-#include <UI.Xaml.Media.Media3D.h>
 
 #include "DevMenu.h"
 #include "Modules/DevSettingsModule.h"
 
 namespace react::uwp {
+
+using XamlView = Microsoft::ReactNative::XamlView;
 
 //===========================================================================
 // ReactRootControl implementation
@@ -61,13 +62,8 @@ ReactRootControl::~ReactRootControl() noexcept {
   }
 }
 
-std::shared_ptr<IReactInstance> ReactRootControl::GetReactInstance() const noexcept {
-  if (auto reactInstance = m_weakReactInstance.GetStrongPtr()) {
-    auto &legacyInstance = query_cast<Mso::React::ILegacyReactInstance &>(*reactInstance);
-    return legacyInstance.UwpReactInstance();
-  }
-
-  return {};
+Mso::React::IReactContext *ReactRootControl::GetReactContext() const noexcept {
+  return m_context.Get();
 }
 
 XamlView ReactRootControl::GetXamlView() const noexcept {
@@ -75,10 +71,6 @@ XamlView ReactRootControl::GetXamlView() const noexcept {
 }
 
 void ReactRootControl::SetJSComponentName(std::string && /*mainComponentName*/) noexcept {
-  VerifyElseCrashSz(false, "Deprecated. Use ReactViewHost.");
-}
-
-void ReactRootControl::SetInstanceCreator(const ReactInstanceCreator & /*instanceCreator*/) noexcept {
   VerifyElseCrashSz(false, "Deprecated. Use ReactViewHost.");
 }
 
@@ -156,22 +148,22 @@ void ReactRootControl::InitRootView(
     UninitRootView();
   }
 
-  m_weakReactInstance = Mso::WeakPtr{reactInstance};
-  auto &legacyReactInstance = query_cast<Mso::React::ILegacyReactInstance &>(*reactInstance);
   m_reactOptions = std::make_unique<Mso::React::ReactOptions>(reactInstance->Options());
+  m_weakReactInstance = Mso::WeakPtr{reactInstance};
+  m_context = &reactInstance->GetReactContext();
   m_reactViewOptions = std::make_unique<Mso::React::ReactViewOptions>(std::move(reactViewOptions));
 
-  auto uwpReactInstance = legacyReactInstance.UwpReactInstance();
   if (!m_touchEventHandler) {
-    m_touchEventHandler = std::make_shared<TouchEventHandler>(uwpReactInstance);
+    m_touchEventHandler = std::make_shared<Microsoft::ReactNative::TouchEventHandler>(*m_context);
   }
 
   if (!m_SIPEventHandler) {
-    m_SIPEventHandler = std::make_shared<SIPEventHandler>(uwpReactInstance);
+    m_SIPEventHandler = std::make_shared<Microsoft::ReactNative::SIPEventHandler>(*m_context);
   }
 
   if (!m_previewKeyboardEventHandlerOnRoot) {
-    m_previewKeyboardEventHandlerOnRoot = std::make_shared<PreviewKeyboardEventHandlerOnRoot>(uwpReactInstance);
+    m_previewKeyboardEventHandlerOnRoot =
+        std::make_shared<Microsoft::ReactNative::PreviewKeyboardEventHandlerOnRoot>(*m_context);
   }
 
   auto xamlRootView = m_weakXamlRootView.get();
@@ -195,13 +187,13 @@ void ReactRootControl::UpdateRootViewInternal() noexcept {
   if (auto reactInstance = m_weakReactInstance.GetStrongPtr()) {
     switch (reactInstance->State()) {
       case Mso::React::ReactInstanceState::Loading:
-        ShowInstanceLoading(*reactInstance);
+        ShowInstanceLoading();
         break;
       case Mso::React::ReactInstanceState::WaitingForDebugger:
-        ShowInstanceWaiting(*reactInstance);
+        ShowInstanceWaiting();
         break;
       case Mso::React::ReactInstanceState::Loaded:
-        ShowInstanceLoaded(*reactInstance);
+        ShowInstanceLoaded();
         break;
       case Mso::React::ReactInstanceState::HasError:
         ShowInstanceError();
@@ -217,8 +209,10 @@ void ReactRootControl::UninitRootView() noexcept {
     return;
   }
 
-  if (auto fbReactInstance = m_fbReactInstance.lock()) {
-    fbReactInstance->DetachRootView(this);
+  if (m_isJSViewAttached) {
+    if (auto reactInstance = m_weakReactInstance.GetStrongPtr()) {
+      reactInstance->DetachRootView(this);
+    }
   }
 
   if (m_touchEventHandler != nullptr) {
@@ -236,21 +230,63 @@ void ReactRootControl::UninitRootView() noexcept {
   m_SIPEventHandler.reset();
 
   m_reactOptions = nullptr;
+  m_context.Clear();
   m_reactViewOptions = nullptr;
   m_weakReactInstance = nullptr;
 
   m_isInitialized = false;
 }
 
-void ReactRootControl::ShowInstanceLoaded(Mso::React::IReactInstance &reactInstance) noexcept {
+void ReactRootControl::ClearLoadingUI() noexcept {
   if (XamlView xamlRootView = m_weakXamlRootView.get()) {
     auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
 
-    // Remove existing children from root view (from the hosted app)
-    xamlRootGrid.Children().Clear();
+    auto children = xamlRootGrid.Children();
+    uint32_t index{0};
+    if (m_greenBoxGrid && children.IndexOf(m_greenBoxGrid, index)) {
+      children.RemoveAt(index);
+    }
+  }
+}
 
-    auto &legacyInstance = query_cast<Mso::React::ILegacyReactInstance &>(reactInstance);
-    legacyInstance.AttachMeasuredRootView(this, Mso::Copy(m_reactViewOptions->InitialProps));
+void ReactRootControl::EnsureLoadingUI() noexcept {
+  if (XamlView xamlRootView = m_weakXamlRootView.get()) {
+    auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
+
+    // Create Grid & TextBlock to hold text
+    if (m_waitingTextBlock == nullptr) {
+      m_waitingTextBlock = winrt::TextBlock();
+      m_greenBoxGrid = winrt::Grid{};
+      m_greenBoxGrid.Background(xaml::Media::SolidColorBrush(winrt::ColorHelper::FromArgb(0xff, 0x03, 0x59, 0)));
+      m_greenBoxGrid.Children().Append(m_waitingTextBlock);
+      m_greenBoxGrid.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+      // Format TextBlock
+      m_waitingTextBlock.TextAlignment(winrt::TextAlignment::Center);
+      m_waitingTextBlock.TextWrapping(xaml::TextWrapping::Wrap);
+      m_waitingTextBlock.FontFamily(winrt::FontFamily(L"Consolas"));
+      m_waitingTextBlock.Foreground(xaml::Media::SolidColorBrush(winrt::Colors::White()));
+      winrt::Thickness margin = {10.0f, 10.0f, 10.0f, 10.0f};
+      m_waitingTextBlock.Margin(margin);
+    }
+
+    auto children = xamlRootGrid.Children();
+    uint32_t index;
+    if (m_greenBoxGrid && !children.IndexOf(m_greenBoxGrid, index)) {
+      children.Append(m_greenBoxGrid);
+    }
+  }
+}
+
+void ReactRootControl::ShowInstanceLoaded() noexcept {
+  if (XamlView xamlRootView = m_weakXamlRootView.get()) {
+    auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
+
+    ClearLoadingUI();
+
+    if (auto reactInstance = m_weakReactInstance.GetStrongPtr()) {
+      reactInstance->AttachMeasuredRootView(this, Mso::Copy(m_reactViewOptions->InitialProps));
+    }
     m_isJSViewAttached = true;
   }
 }
@@ -259,77 +295,34 @@ void ReactRootControl::ShowInstanceError() noexcept {
   if (XamlView xamlRootView = m_weakXamlRootView.get()) {
     auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
 
-    // Remove existing children from root view (from the hosted app)
-    xamlRootGrid.Children().Clear();
+    ClearLoadingUI();
   }
 }
 
-void ReactRootControl::ShowInstanceWaiting(Mso::React::IReactInstance & /*reactInstance*/) noexcept {
+void ReactRootControl::ShowInstanceWaiting() noexcept {
   if (XamlView xamlRootView = m_weakXamlRootView.get()) {
     auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
 
-    // Remove existing children from root view (from the hosted app)
-    xamlRootGrid.Children().Clear();
-
-    // Create Grid & TextBlock to hold text
-    if (m_waitingTextBlock == nullptr) {
-      m_waitingTextBlock = winrt::TextBlock();
-      m_greenBoxGrid = winrt::Grid{};
-      m_greenBoxGrid.Background(xaml::Media::SolidColorBrush(winrt::ColorHelper::FromArgb(0xff, 0x03, 0x59, 0)));
-      m_greenBoxGrid.Children().Append(m_waitingTextBlock);
-      m_greenBoxGrid.VerticalAlignment(xaml::VerticalAlignment::Center);
-    }
-
-    // Add box grid to root view
-    xamlRootGrid.Children().Append(m_greenBoxGrid);
+    EnsureLoadingUI();
 
     // Place message into TextBlock
     std::wstring wstrMessage(L"Connecting to remote debugger");
     m_waitingTextBlock.Text(wstrMessage);
-
-    // Format TextBlock
-    m_waitingTextBlock.TextAlignment(winrt::TextAlignment::Center);
-    m_waitingTextBlock.TextWrapping(xaml::TextWrapping::Wrap);
-    m_waitingTextBlock.FontFamily(winrt::FontFamily(L"Consolas"));
-    m_waitingTextBlock.Foreground(xaml::Media::SolidColorBrush(winrt::Colors::White()));
-    winrt::Thickness margin = {10.0f, 10.0f, 10.0f, 10.0f};
-    m_waitingTextBlock.Margin(margin);
   }
 }
 
-void ReactRootControl::ShowInstanceLoading(Mso::React::IReactInstance & /*reactInstance*/) noexcept {
-  if (!m_reactOptions->UseDeveloperSupport())
+void ReactRootControl::ShowInstanceLoading() noexcept {
+  if (!m_context->SettingsSnapshot().UseDeveloperSupport())
     return;
 
   if (XamlView xamlRootView = m_weakXamlRootView.get()) {
     auto xamlRootGrid{xamlRootView.as<winrt::Grid>()};
 
-    // Remove existing children from root view (from the hosted app)
-    xamlRootGrid.Children().Clear();
-
-    // Create Grid & TextBlock to hold text
-    if (m_waitingTextBlock == nullptr) {
-      m_waitingTextBlock = winrt::TextBlock();
-      m_greenBoxGrid = winrt::Grid{};
-      m_greenBoxGrid.Background(xaml::Media::SolidColorBrush(winrt::ColorHelper::FromArgb(0xff, 0x03, 0x59, 0)));
-      m_greenBoxGrid.Children().Append(m_waitingTextBlock);
-      m_greenBoxGrid.VerticalAlignment(xaml::VerticalAlignment::Center);
-    }
-
-    // Add box grid to root view
-    xamlRootGrid.Children().Append(m_greenBoxGrid);
+    EnsureLoadingUI();
 
     // Place message into TextBlock
     std::wstring wstrMessage(L"Loading bundle.");
     m_waitingTextBlock.Text(wstrMessage);
-
-    // Format TextBlock
-    m_waitingTextBlock.TextAlignment(winrt::TextAlignment::Center);
-    m_waitingTextBlock.TextWrapping(xaml::TextWrapping::Wrap);
-    m_waitingTextBlock.FontFamily(winrt::FontFamily(L"Consolas"));
-    m_waitingTextBlock.Foreground(xaml::Media::SolidColorBrush(winrt::Colors::White()));
-    winrt::Thickness margin = {10.0f, 10.0f, 10.0f, 10.0f};
-    m_waitingTextBlock.Margin(margin);
   }
 }
 
@@ -345,13 +338,6 @@ void ReactRootControl::PrepareXamlRootView(XamlView const &rootView) noexcept {
     children.Clear();
 
     auto newRootView = winrt::Grid{};
-    // Xaml's default projection in 3D is orthographic (all lines are parallel)
-    // However React Native's default projection is a one-point perspective.
-    // Set a default perspective projection on the main control to mimic this.
-    auto perspectiveTransform3D = xaml::Media::Media3D::PerspectiveTransform3D();
-    perspectiveTransform3D.Depth(850);
-    xaml::Media::Media3D::Transform3D t3d(perspectiveTransform3D);
-    newRootView.Transform3D(t3d);
     children.Append(newRootView);
     m_weakXamlRootView = newRootView.try_as<XamlView>();
   } else {
@@ -432,7 +418,9 @@ void ReactRootControl::AttachBackHandlers(XamlView const &rootView) noexcept {
   altLeft.Modifiers(winrt::Windows::System::VirtualKeyModifiers::Menu);
 
   // Hide keyboard accelerator tooltips
-  rootElement.KeyboardAcceleratorPlacementMode(xaml::Input::KeyboardAcceleratorPlacementMode::Hidden);
+  if (react::uwp::IsRS4OrHigher()) {
+    rootElement.KeyboardAcceleratorPlacementMode(xaml::Input::KeyboardAcceleratorPlacementMode::Hidden);
+  }
 }
 
 void ReactRootControl::RemoveBackHandlers() noexcept {
@@ -445,13 +433,11 @@ void ReactRootControl::RemoveBackHandlers() noexcept {
 }
 
 bool ReactRootControl::OnBackRequested() noexcept {
-  if (auto reactInstance = m_weakReactInstance.GetStrongPtr()) {
-    query_cast<Mso::React::ILegacyReactInstance &>(*reactInstance)
-        .CallJsFunction("RCTDeviceEventEmitter", "emit", folly::dynamic::array("hardwareBackPress"));
-    return true;
-  }
+  if (m_context->State() != Mso::React::ReactInstanceState::Loaded)
+    return false;
 
-  return false;
+  m_context->CallJSFunction("RCTDeviceEventEmitter", "emit", folly::dynamic::array("hardwareBackPress"));
+  return true;
 }
 
 Mso::React::IReactViewHost *ReactRootControl::ReactViewHost() noexcept {
@@ -488,18 +474,18 @@ ReactViewInstance::ReactViewInstance(
 Mso::Future<void> ReactViewInstance::InitRootView(
     Mso::CntPtr<Mso::React::IReactInstance> &&reactInstance,
     Mso::React::ReactViewOptions &&viewOptions) noexcept {
-  return PostInUIQueue([ reactInstance{std::move(reactInstance)}, viewOptions{std::move(viewOptions)} ](
-      ReactRootControl & rootControl) mutable noexcept {
+  return PostInUIQueue([reactInstance{std::move(reactInstance)},
+                        viewOptions{std::move(viewOptions)}](ReactRootControl &rootControl) mutable noexcept {
     rootControl.InitRootView(std::move(reactInstance), std::move(viewOptions));
   });
 }
 
 Mso::Future<void> ReactViewInstance::UpdateRootView() noexcept {
-  return PostInUIQueue([](ReactRootControl & rootControl) mutable noexcept { rootControl.UpdateRootView(); });
+  return PostInUIQueue([](ReactRootControl &rootControl) mutable noexcept { rootControl.UpdateRootView(); });
 }
 
 Mso::Future<void> ReactViewInstance::UninitRootView() noexcept {
-  return PostInUIQueue([](ReactRootControl & rootControl) mutable noexcept { rootControl.UninitRootView(); });
+  return PostInUIQueue([](ReactRootControl &rootControl) mutable noexcept { rootControl.UninitRootView(); });
 }
 
 } // namespace react::uwp

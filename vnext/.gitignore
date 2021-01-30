@@ -23,10 +23,6 @@ project.xcworkspace
 
 # Gradle
 /build/
-/RNTester/android/app/build/
-/RNTester/android/app/gradle/
-/RNTester/android/app/gradlew
-/RNTester/android/app/gradlew.bat
 /ReactAndroid/build/
 
 # Buck
@@ -43,17 +39,19 @@ node_modules
 /bots/node_modules/
 
 /flow
+/flow-typed
 /dist
+/IntegrationTests/*.command
 /IntegrationTests/*.js
 /IntegrationTests/*.png
 /lib
 /Libraries
 /jest
-/RNTester
 /RNTester.*
 /index.*
 /interface.*
 /typings-index.*
+/rn-get-polyfills.js
 
 # VS Code
 .vscode/*
@@ -92,5 +90,12 @@ temp
 /third-party
 /packages/
 
+# Build output for babel-plugin-codegen - will be removed once the babel-plugin-codegen package is published
+/babel-plugin-codegen
+
 # Copied from root as part of build
 /README.md
+/LICENCE
+
+# Keep the template certificates
+!template/**/*.pfx

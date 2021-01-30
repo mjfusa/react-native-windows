@@ -65,7 +65,7 @@ __pragma(warning(suppress : 4472)) enum class AssertResult : uint32_t {
 #endif // DEBUG
 #endif // C++
 
-// TODO: move this abstraction into compilerAdapters? Except it depends on windows - hmm
+// TODO: move this abstraction into compilerAdapters? Except it depends on Windows - hmm
 #if defined(__clang__) || defined(__cplusplus_cli) || defined(__INTELLISENSE__)
 #define AssertBreak(wzMsg) __debugbreak()
 #elif defined(_DBGRAISEASSERTIONFAILURE_)
@@ -209,7 +209,7 @@ static
   AssertDetails_Statement_End
 
 #define FAssertDoSucceededTag(expr, tag)                                              \
-  [&]() noexcept->bool {                                                              \
+  [&]() noexcept -> bool {                                                            \
     HRESULT _hr_ = (expr);                                                            \
     if (FAILED(_hr_)) {                                                               \
       if (MsoAssertSzTagProcInline(                                                   \
@@ -222,8 +222,7 @@ static
     }                                                                                 \
     return SUCCEEDED(_hr_);                                                           \
     OACR_WARNING_SUPPRESS(NOEXCEPT_FUNC_THROWS, "Ignore whether expr throws.");       \
-  }                                                                                   \
-  ()
+  }()
 
 #else
 

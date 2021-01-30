@@ -18,27 +18,26 @@ void ReactModuleBuilderMock::ExpectEvent(
     std::wstring_view eventEmitterName,
     std::wstring_view eventName,
     Mso::Functor<void(JSValueArray const &)> &&checkValues) noexcept {
-  m_jsEventHandler = [
-    expectedEventEmitterName = std::wstring{eventEmitterName},
-    expectedEventName = std::wstring{eventName},
-    checkValues = std::move(checkValues)
-  ](std::wstring_view eventEmitterName, std::wstring_view eventName, JSValue const &value) noexcept {
-    TestCheck(expectedEventEmitterName == eventEmitterName);
-    TestCheck(expectedEventName == eventName);
-    TestCheck(value.Type() == JSValueType::Array);
-    checkValues(value.AsArray());
-  };
+  m_jsEventHandler =
+      [expectedEventEmitterName = std::wstring{eventEmitterName},
+       expectedEventName = std::wstring{eventName},
+       checkValues = std::move(checkValues)](
+          std::wstring_view eventEmitterName, std::wstring_view eventName, JSValue const &value) noexcept {
+        TestCheck(expectedEventEmitterName == eventEmitterName);
+        TestCheck(expectedEventName == eventName);
+        TestCheck(value.Type() == JSValueType::Array);
+        checkValues(value.AsArray());
+      };
 }
 
 void ReactModuleBuilderMock::ExpectFunction(
     std::wstring_view moduleName,
     std::wstring_view functionName,
     Mso::Functor<void(JSValueArray const &)> &&checkValues) noexcept {
-  m_jsFunctionHandler = [
-    expectedModuleName = std::wstring{moduleName},
-    expectedFuncName = std::wstring{functionName},
-    checkValues = std::move(checkValues)
-  ](std::wstring_view moduleName, std::wstring_view funcName, JSValue const &value) noexcept {
+  m_jsFunctionHandler = [expectedModuleName = std::wstring{moduleName},
+                         expectedFuncName = std::wstring{functionName},
+                         checkValues = std::move(checkValues)](
+                            std::wstring_view moduleName, std::wstring_view funcName, JSValue const &value) noexcept {
     TestCheck(expectedModuleName == moduleName);
     TestCheck(expectedFuncName == funcName);
     TestCheck(value.Type() == JSValueType::Array);
@@ -158,6 +157,25 @@ void ReactContextMock::EmitJSEvent(
     hstring const &eventName,
     JSValueArgWriter const &paramsArgWriter) noexcept {
   m_builderMock->EmitJSEvent(eventEmitterName, eventName, paramsArgWriter);
+}
+
+Microsoft::ReactNative::IReactPropertyNamespace ReactPropertyBagHelper::GlobalNamespace() {
+  VerifyElseCrashSz(false, "Not implemented");
+}
+
+Microsoft::ReactNative::IReactPropertyNamespace ReactPropertyBagHelper::GetNamespace(
+    param::hstring const & /*namespaceName*/) {
+  VerifyElseCrashSz(false, "Not implemented");
+}
+
+Microsoft::ReactNative::IReactPropertyName ReactPropertyBagHelper::GetName(
+    Microsoft::ReactNative::IReactPropertyNamespace const & /*ns*/,
+    param::hstring const & /*localName*/) {
+  VerifyElseCrashSz(false, "Not implemented");
+}
+
+Microsoft::ReactNative::IReactPropertyBag ReactPropertyBagHelper::CreatePropertyBag() {
+  VerifyElseCrashSz(false, "Not implemented");
 }
 
 } // namespace winrt::Microsoft::ReactNative

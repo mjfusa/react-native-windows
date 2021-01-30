@@ -7,101 +7,68 @@
 
 const path = require('path');
 const {
+  cleanTask,
   task,
-  copyTask,
   series,
   condition,
   option,
   argv,
   tscTask,
-  eslintTask,
-  apiExtractorVerifyTask,
-  apiExtractorUpdateTask,
-  cleanTask,
 } = require('just-scripts');
+
+// Use the shared base configuration
+require('@rnw-scripts/just-task');
+require('@rnw-scripts/just-task/react-native-tasks');
+
 const {execSync} = require('child_process');
 const fs = require('fs');
-const libPath = path.resolve(process.cwd(), 'lib');
-const srcPath = path.resolve(process.cwd(), 'src');
 
 option('production');
 option('clean');
-option('ci');
 
-task('apiExtractorVerify', apiExtractorVerifyTask());
-task('apiExtractorUpdate', apiExtractorUpdateTask());
+task(
+  'codegen',
+  series(cleanTask({paths: ['./codegen']}), () => {
+    execSync(
+      'npx react-native-windows-codegen --files Libraries/**/Native*.js --namespace Microsoft::ReactNativeSpecs',
+    );
+  }),
+);
 
-task('apiDocumenter', () => {
-  require('child_process').execSync(
-    'npx @microsoft/api-documenter markdown -i temp -o ../docs/api',
-    {stdio: 'inherit'},
-  );
-});
-
-task('codegen', () => {
-  execSync(
-    'npx react-native-windows-codegen --files Libraries/**/Native*.js --namespace Microsoft::ReactNativeSpecs',
-  );
-});
-
-task('flow-check', () => {
-  require('child_process').execSync('npx flow check', {stdio: 'inherit'});
-});
-
-task('eslint', () => {
-  return eslintTask();
-});
-task('eslint:fix', () => {
-  return eslintTask({fix: true});
-});
-
-task('copyFlowFiles', () => {
-  return copyTask(['src/**/*.js'], '.');
-});
-task('initRNLibraries', () => {
-  require('./Scripts/copyRNLibraries').copyRNLibraries(__dirname);
-});
-
-task('copyReadmeFromRoot', () => {
+task('copyReadmeAndLicenseFromRoot', () => {
   fs.copyFileSync(
     path.resolve(__dirname, '../README.md'),
     path.resolve(__dirname, 'README.md'),
   );
-});
-
-task('ts', () => {
-  return tscTask({
-    pretty: true,
-    ...(argv().production && {
-      inlineSources: true,
-      sourceRoot: path.relative(libPath, srcPath),
-    }),
-    target: 'es5',
-    module: 'commonjs',
-  });
-});
-task('clean', () => {
-  return cleanTask(
-    ['dist', 'flow', 'jest', 'Libraries', 'RNTester'].map(p =>
-      path.join(process.cwd(), p),
-    ),
+  fs.copyFileSync(
+    path.resolve(__dirname, '../LICENSE'),
+    path.resolve(__dirname, 'LICENSE'),
   );
 });
 
 task(
+  'compileTsPlatformOverrides',
+  tscTask({
+    pretty: true,
+    ...(argv().production && {
+      inlineSources: true,
+    }),
+    target: 'es5',
+    module: 'commonjs',
+  }),
+);
+
+task(
   'build',
   series(
-    condition('clean', () => true || argv().clean),
-    'initRNLibraries',
-    'copyFlowFiles',
-    'copyReadmeFromRoot',
-    'ts',
+    condition('clean', () => argv().clean),
+    'copyRNLibraries',
+    'copyReadmeAndLicenseFromRoot',
+    'compileTsPlatformOverrides',
     'codegen',
-    condition('apiExtractorVerify', () => argv().ci),
   ),
 );
 
-task('lint', series('eslint', 'flow-check'));
-task('lint:fix', series('eslint:fix'));
+task('clean', series('cleanRNLibraries'));
 
-task('api', series('apiExtractorUpdate', 'apiDocumenter'));
+task('lint', series('eslint', 'flow-check'));

@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// IMPORTANT: Before updating this file
+// please read react-native-windows repo:
+// vnext/Microsoft.ReactNative.Cxx/README.md
 
 #pragma once
-#include "winrt/Microsoft.ReactNative.h"
-
+#include <winrt/Windows.Foundation.h>
 #include "JSValueReader.h"
 #include "JSValueWriter.h"
 #include "ModuleRegistration.h"
 #include "ReactContext.h"
 #include "ReactNonAbiValue.h"
 #include "ReactPromise.h"
+#include "winrt/Microsoft.ReactNative.h"
 
 #include <functional>
 #include <type_traits>
@@ -141,7 +144,7 @@
       "Method '" methodName "' does not match signature" REACT_SHOW_SYNC_METHOD_SIGNATURES(methodName, signatures));
 
 //
-// Code below helps to register React native modules and verify method signatures
+// Code below helps to register React Native modules and verify method signatures
 // against specification.
 //
 
@@ -211,7 +214,7 @@ struct CallbackCreator<TCallback<void(TArgs...)>> {
   static TCallback<void(TArgs...)> Create(
       IJSValueWriter const &argWriter,
       MethodResultCallback const &callback) noexcept {
-    return TCallback([ callback, argWriter ](TArgs... args) noexcept {
+    return TCallback<void(TArgs...)>([callback, argWriter](TArgs... args) noexcept {
       WriteArgs(argWriter, std::move(args)...);
       callback(argWriter);
     });
@@ -224,7 +227,7 @@ struct CallbackCreator<TCallback<void(TArgs...) noexcept>> {
   static TCallback<void(TArgs...)> Create(
       IJSValueWriter const &argWriter,
       MethodResultCallback const &callback) noexcept {
-    return TCallback([ callback, argWriter ](TArgs... args) noexcept {
+    return TCallback<void(TArgs...)>([callback, argWriter](TArgs... args) noexcept {
       WriteArgs(argWriter, std::move(args)...);
       callback(argWriter);
     });
@@ -256,7 +259,7 @@ struct IsPromise<ReactPromise<T>> : std::true_type {};
 template <class TArgsTuple>
 constexpr size_t GetPromiseCount() noexcept {
   if constexpr (
-      std::tuple_size_v<TArgsTuple>> 0 &&
+      std::tuple_size_v<TArgsTuple> > 0 &&
       IsPromise<TupleElementOrVoid<std::tuple_size_v<TArgsTuple> - 1, TArgsTuple>>::value) {
     return 1;
   } else {
@@ -272,9 +275,15 @@ constexpr bool IsVoidResultCheck() noexcept {
 template <class TResult, class TArg>
 constexpr void ValidateCoroutineArg() noexcept {
   if constexpr (std::is_same_v<TResult, fire_and_forget>) {
+    // unfortunately __PRETTY_FUNCTION__ is not able to be put after a string literal
+    // so no detail information is provided for macOS
     static_assert(
         !std::is_reference_v<TArg> && !std::is_pointer_v<TArg>,
-        "Coroutine parameter must be passed by value for safe access: " __FUNCSIG__);
+        "Coroutine parameter must be passed by value for safe access"
+#ifndef __APPLE__
+        ": " __FUNCSIG__
+#endif
+    );
   }
 }
 
@@ -392,7 +401,7 @@ struct ModuleInitMethodInfo<void (TModule::*)(ReactContext const &) noexcept> {
   using MethodType = void (TModule::*)(ReactContext const &) noexcept;
 
   static InitializerDelegate GetInitializer(void *module, MethodType method) noexcept {
-    return [ module = static_cast<ModuleType *>(module), method ](ReactContext const &reactContext) noexcept {
+    return [module = static_cast<ModuleType *>(module), method](ReactContext const &reactContext) noexcept {
       (module->*method)(reactContext);
     };
   }
@@ -491,11 +500,11 @@ struct ModuleMethodInfo<TResult (TModule::*)(TArgs...) noexcept> : ModuleMethodI
       std::index_sequence<ArgIndex...>,
       std::index_sequence<CallbackIndex...>,
       std::index_sequence<PromiseIndex...>) noexcept {
-    return [ module, method ](
-        IJSValueReader const &argReader,
-        [[maybe_unused]] IJSValueWriter const &argWriter,
-        [[maybe_unused]] MethodResultCallback const &resolve,
-        [[maybe_unused]] MethodResultCallback const &reject) mutable noexcept {
+    return [module, method](
+               IJSValueReader const &argReader,
+               [[maybe_unused]] IJSValueWriter const &argWriter,
+               [[maybe_unused]] MethodResultCallback const &resolve,
+               [[maybe_unused]] MethodResultCallback const &reject) mutable noexcept {
       typename Super::InputArgTuple inputArgs{};
       ReadArgs(argReader, std::get<ArgIndex>(inputArgs)...);
       if constexpr (!Super::IsVoidResult) {
@@ -549,10 +558,10 @@ struct ModuleMethodInfo<TResult (*)(TArgs...) noexcept> : ModuleMethodInfoBase<T
       std::index_sequence<CallbackIndex...>,
       std::index_sequence<PromiseIndex...>) noexcept {
     return [method](
-        IJSValueReader const &argReader,
-        [[maybe_unused]] IJSValueWriter const &argWriter,
-        [[maybe_unused]] MethodResultCallback const &resolve,
-        [[maybe_unused]] MethodResultCallback const &reject) mutable noexcept {
+               IJSValueReader const &argReader,
+               [[maybe_unused]] IJSValueWriter const &argWriter,
+               [[maybe_unused]] MethodResultCallback const &resolve,
+               [[maybe_unused]] MethodResultCallback const &reject) mutable noexcept {
       typename Super::InputArgTuple inputArgs{};
       ReadArgs(argReader, std::get<ArgIndex>(inputArgs)...);
       if constexpr (!Super::IsVoidResult) {
@@ -613,12 +622,12 @@ struct ModuleSyncMethodInfo<TResult (TModule::*)(TArgs...) noexcept>
 
   template <size_t... I>
   static SyncMethodDelegate GetFunc(ModuleType *module, MethodType method, std::index_sequence<I...>) noexcept {
-    return [ module, method ](IJSValueReader const &argReader, IJSValueWriter const &argWriter) mutable noexcept {
+    return [module, method](IJSValueReader const &argReader, IJSValueWriter const &argWriter) mutable noexcept {
       using ArgTuple = std::tuple<std::remove_reference_t<TArgs>...>;
       ArgTuple typedArgs{};
       ReadArgs(argReader, std::get<I>(typedArgs)...);
       TResult result = (module->*method)(std::get<I>(std::move(typedArgs))...);
-      WriteArgs(argWriter, result);
+      WriteValue(argWriter, result);
     };
   }
 
@@ -646,7 +655,7 @@ struct ModuleSyncMethodInfo<TResult (*)(TArgs...) noexcept> : ModuleSyncMethodIn
       ArgTuple typedArgs{};
       ReadArgs(argReader, std::get<I>(typedArgs)...);
       TResult result = (*method)(std::get<I>(std::move(typedArgs))...);
-      WriteArgs(argWriter, result);
+      WriteValue(argWriter, result);
     };
   }
 
@@ -670,8 +679,7 @@ struct ModuleConstFieldInfo<TValue TModule::*> {
   using FieldType = TValue TModule::*;
 
   static ConstantProviderDelegate GetConstantProvider(void *module, std::wstring_view name, FieldType field) noexcept {
-    return
-        [ module = static_cast<ModuleType *>(module), name, field ](IJSValueWriter const &argWriter) mutable noexcept {
+    return [module = static_cast<ModuleType *>(module), name, field](IJSValueWriter const &argWriter) mutable noexcept {
       WriteProperty(argWriter, name, module->*field);
     };
   }
@@ -683,9 +691,7 @@ struct ModuleConstFieldInfo<TValue *> {
 
   static ConstantProviderDelegate
   GetConstantProvider(void * /*module*/, std::wstring_view name, FieldType field) noexcept {
-    return [ name, field ](IJSValueWriter const &argWriter) mutable noexcept {
-      WriteProperty(argWriter, name, *field);
-    };
+    return [name, field](IJSValueWriter const &argWriter) mutable noexcept { WriteProperty(argWriter, name, *field); };
   }
 };
 
@@ -714,7 +720,7 @@ struct ModuleConstantInfo<void (TModule::*)(ReactConstantProvider &) noexcept> {
   using MethodType = void (TModule::*)(ReactConstantProvider &) noexcept;
 
   static ConstantProviderDelegate GetConstantProvider(void *module, MethodType method) noexcept {
-    return [ module = static_cast<ModuleType *>(module), method ](IJSValueWriter const &argWriter) mutable noexcept {
+    return [module = static_cast<ModuleType *>(module), method](IJSValueWriter const &argWriter) mutable noexcept {
       ReactConstantProvider constantProvider{argWriter};
       (module->*method)(constantProvider);
     };
@@ -747,9 +753,9 @@ struct ModuleEventFieldInfo<TFunc<void(TArgs...)> TModule::*> {
       FieldType field,
       std::wstring_view eventName,
       std::wstring_view eventEmitterName) noexcept {
-    return [ module = static_cast<ModuleType *>(module), field, eventName, eventEmitterName ](
-        IReactContext const &reactContext) noexcept {
-      module->*field = [ reactContext, eventEmitterName, eventName ](TArgs... args) noexcept {
+    return [module = static_cast<ModuleType *>(module), field, eventName, eventEmitterName](
+               IReactContext const &reactContext) noexcept {
+      module->*field = [reactContext, eventEmitterName, eventName](TArgs... args) noexcept {
         reactContext.EmitJSEvent(
             eventEmitterName, eventName, [&args...]([[maybe_unused]] IJSValueWriter const &argWriter) noexcept {
               (void)argWriter; // [[maybe_unused]] above does not work
@@ -774,9 +780,9 @@ struct ModuleFunctionFieldInfo<TFunc<void(TArgs...)> TModule::*> {
       FieldType field,
       std::wstring_view functionName,
       std::wstring_view moduleName) noexcept {
-    return [ module = static_cast<ModuleType *>(module), field, functionName, moduleName ](
-        IReactContext const &reactContext) noexcept {
-      module->*field = [ reactContext, functionName, moduleName ](TArgs... args) noexcept {
+    return [module = static_cast<ModuleType *>(module), field, functionName, moduleName](
+               IReactContext const &reactContext) noexcept {
+      module->*field = [reactContext, functionName, moduleName](TArgs... args) noexcept {
         reactContext.CallJSFunction(moduleName, functionName, [&args...](IJSValueWriter const &argWriter) noexcept {
           WriteArgs(argWriter, args...);
         });
@@ -1009,9 +1015,9 @@ struct ReactMethodVerifier {
     return verifier.m_result;
   }
 
-  template <class TMember, class TAttribute, int I>
+  template <class TMember, class TAttribute, int I2>
   constexpr void
-  Visit([[maybe_unused]] TMember member, ReactAttributeId<I> /*attributeId*/, TAttribute /*attributeInfo*/) noexcept {
+  Visit([[maybe_unused]] TMember member, ReactAttributeId<I2> /*attributeId*/, TAttribute /*attributeInfo*/) noexcept {
     m_result = ModuleMethodInfo<TMember>::template Match<TMethodSpec>();
   }
 
@@ -1027,9 +1033,9 @@ struct ReactSyncMethodVerifier {
     return verifier.m_result;
   }
 
-  template <class TMember, class TAttribute, int I>
+  template <class TMember, class TAttribute, int I2>
   constexpr void
-  Visit([[maybe_unused]] TMember member, ReactAttributeId<I> /*attributeId*/, TAttribute /*attributeInfo*/) noexcept {
+  Visit([[maybe_unused]] TMember member, ReactAttributeId<I2> /*attributeId*/, TAttribute /*attributeInfo*/) noexcept {
     m_result = ModuleSyncMethodInfo<TMember>::template Match<TMethodSpec>();
   }
 
@@ -1111,19 +1117,20 @@ struct TurboModuleSpec {
 // The default factory for the TModule.
 // It wraps up the TModule into a ReactNonAbiValue to be passed through the ABI boundary.
 template <class TModule>
-inline std::tuple<IInspectable, TModule *> MakeDefaultReactModuleWrapper() noexcept {
+inline std::tuple<winrt::Windows::Foundation::IInspectable, TModule *> MakeDefaultReactModuleWrapper() noexcept {
   ReactNonAbiValue<TModule> moduleWrapper{std::in_place};
   TModule *module = moduleWrapper.GetPtr();
-  return std::tuple<IInspectable, TModule *>{std::move(moduleWrapper), module};
+  return std::tuple<winrt::Windows::Foundation::IInspectable, TModule *>{std::move(moduleWrapper), module};
 }
 
 // The default factory for TModule inherited from enable_shared_from_this<T>.
 // It wraps up the TModule into an  std::shared_ptr before giving it to ReactNonAbiValue.
 template <class TModule>
-inline std::tuple<IInspectable, TModule *> MakeDefaultSharedPtrReactModuleWrapper() noexcept {
+inline std::tuple<winrt::Windows::Foundation::IInspectable, TModule *>
+MakeDefaultSharedPtrReactModuleWrapper() noexcept {
   ReactNonAbiValue<std::shared_ptr<TModule>> moduleWrapper{std::in_place, std::make_shared<TModule>()};
   TModule *module = moduleWrapper.GetPtr()->get();
-  return std::tuple<IInspectable, TModule *>{std::move(moduleWrapper), module};
+  return std::tuple<winrt::Windows::Foundation::IInspectable, TModule *>{std::move(moduleWrapper), module};
 }
 
 namespace Internal {
@@ -1157,7 +1164,7 @@ inline constexpr auto GetReactModuleFactory(TModule * /*moduleNullPtr*/, int * /
 // Type traits for TModule. It defines a factory to create the module and its ABI-safe wrapper.
 template <class TModule>
 struct ReactModuleTraits {
-  using FactoryType = std::tuple<IInspectable, TModule *>() noexcept;
+  using FactoryType = std::tuple<winrt::Windows::Foundation::IInspectable, TModule *>() noexcept;
   static constexpr FactoryType *Factory = GetReactModuleFactory((TModule *)nullptr, 0);
 };
 

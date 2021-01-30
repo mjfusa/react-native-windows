@@ -7,9 +7,11 @@
 
 #include "ReactPackageBuilder.h"
 #include "RedBox.h"
+#include "TurboModulesProvider.h"
 
 #include <future/futureWinRT.h>
 #include <winrt/Windows.Foundation.Collections.h>
+#include "IReactContext.h"
 #include "ReactInstanceSettings.h"
 
 using namespace winrt;
@@ -32,6 +34,11 @@ ReactNativeHost::ReactNativeHost() noexcept : m_reactHost{Mso::React::MakeReactH
 #endif
 }
 
+/*static*/ ReactNative::ReactNativeHost ReactNativeHost::FromContext(
+    ReactNative::IReactContext const &reactContext) noexcept {
+  return GetReactNativeHost(ReactPropertyBag{reactContext.Properties()});
+}
+
 IVector<IReactPackageProvider> ReactNativeHost::PackageProviders() noexcept {
   return InstanceSettings().PackageProviders();
 }
@@ -52,21 +59,48 @@ IAsyncAction ReactNativeHost::LoadInstance() noexcept {
   return ReloadInstance();
 }
 
-IAsyncAction ReactNativeHost::ReloadInstance() noexcept {
-#ifndef CORE_ABI
-  auto modulesProvider = std::make_shared<NativeModulesProvider>();
-  auto viewManagersProvider = std::make_shared<ViewManagersProvider>();
-  auto turboModulesProvider = std::make_shared<TurboModulesProvider>();
+winrt::Microsoft::ReactNative::ReactPropertyId<
+    winrt::Microsoft::ReactNative::ReactNonAbiValue<winrt::weak_ref<ReactNativeHost>>>
+ReactNativeHostProperty() noexcept {
+  static winrt::Microsoft::ReactNative::ReactPropertyId<
+      winrt::Microsoft::ReactNative::ReactNonAbiValue<winrt::weak_ref<ReactNativeHost>>>
+      propId{L"ReactNative.ReactNativeHost", L"ReactNativeHost"};
+  return propId;
+}
 
-  if (!m_packageBuilder) {
-    m_packageBuilder = make<ReactPackageBuilder>(modulesProvider, viewManagersProvider, turboModulesProvider);
-
-    if (auto packageProviders = InstanceSettings().PackageProviders()) {
-      for (auto const &packageProvider : packageProviders) {
-        packageProvider.CreatePackage(m_packageBuilder);
-      }
+/*static*/ winrt::Microsoft::ReactNative::ReactNativeHost ReactNativeHost::GetReactNativeHost(
+    ReactPropertyBag const &properties) noexcept {
+  if (auto wkHost = properties.Get(ReactNativeHostProperty()).Value()) {
+    if (auto abiHost = wkHost.get()) {
+      return abiHost.as<winrt::Microsoft::ReactNative::ReactNativeHost>();
     }
   }
+  return nullptr;
+}
+
+IAsyncAction ReactNativeHost::ReloadInstance() noexcept {
+  auto modulesProvider = std::make_shared<NativeModulesProvider>();
+
+#ifndef CORE_ABI
+  auto viewManagersProvider = std::make_shared<ViewManagersProvider>();
+#endif
+
+  auto turboModulesProvider = std::make_shared<TurboModulesProvider>();
+
+  m_packageBuilder = make<ReactPackageBuilder>(
+      modulesProvider,
+#ifndef CORE_ABI
+      viewManagersProvider,
+#endif
+      turboModulesProvider);
+
+  if (auto packageProviders = InstanceSettings().PackageProviders()) {
+    for (auto const &packageProvider : packageProviders) {
+      packageProvider.CreatePackage(m_packageBuilder);
+    }
+  }
+
+  ReactPropertyBag(m_instanceSettings.Properties()).Set(ReactNativeHostProperty(), get_weak());
 
   Mso::React::ReactOptions reactOptions{};
   reactOptions.Properties = m_instanceSettings.Properties();
@@ -86,16 +120,34 @@ IAsyncAction ReactNativeHost::ReloadInstance() noexcept {
     reactOptions.RedBoxHandler = Mso::React::CreateRedBoxHandler(m_instanceSettings.RedBoxHandler());
   }
   reactOptions.DeveloperSettings.SourceBundleHost = to_string(m_instanceSettings.SourceBundleHost());
-  reactOptions.DeveloperSettings.SourceBundlePort =
-      m_instanceSettings.SourceBundlePort() != 0 ? std::to_string(m_instanceSettings.SourceBundlePort()) : "";
+  reactOptions.DeveloperSettings.SourceBundlePort = m_instanceSettings.SourceBundlePort();
 
   reactOptions.ByteCodeFileUri = to_string(m_instanceSettings.ByteCodeFileUri());
   reactOptions.EnableByteCodeCaching = m_instanceSettings.EnableByteCodeCaching();
   reactOptions.UseJsi = m_instanceSettings.UseJsi();
+  reactOptions.JsiEngine = static_cast<Mso::React::JSIEngine>(m_instanceSettings.JSIEngineOverride());
 
   reactOptions.ModuleProvider = modulesProvider;
+#ifndef CORE_ABI
   reactOptions.ViewManagerProvider = viewManagersProvider;
+#endif
   reactOptions.TurboModuleProvider = turboModulesProvider;
+
+  reactOptions.OnInstanceCreated = [](Mso::CntPtr<Mso::React::IReactContext> &&context) {
+    auto notifications = context->Notifications();
+    ReactInstanceSettings::RaiseInstanceCreated(
+        notifications, winrt::make<InstanceCreatedEventArgs>(std::move(context)));
+  };
+  reactOptions.OnInstanceLoaded = [](Mso::CntPtr<Mso::React::IReactContext> &&context, const Mso::ErrorCode &err) {
+    auto notifications = context->Notifications();
+    ReactInstanceSettings::RaiseInstanceLoaded(
+        notifications, winrt::make<InstanceLoadedEventArgs>(std::move(context), !!err));
+  };
+  reactOptions.OnInstanceDestroyed = [](Mso::CntPtr<Mso::React::IReactContext> &&context) {
+    auto notifications = context->Notifications();
+    ReactInstanceSettings::RaiseInstanceDestroyed(
+        notifications, winrt::make<InstanceDestroyedEventArgs>(std::move(context)));
+  };
 
   std::string jsBundleFile = to_string(m_instanceSettings.JavaScriptBundleFile());
   std::string jsMainModuleName = to_string(m_instanceSettings.JavaScriptMainModuleName());
@@ -108,12 +160,7 @@ IAsyncAction ReactNativeHost::ReloadInstance() noexcept {
   }
 
   reactOptions.Identity = jsBundleFile;
-
   return make<Mso::AsyncActionFutureAdapter>(m_reactHost->ReloadInstanceWithOptions(std::move(reactOptions)));
-#else
-  // Core ABI work needed
-  VerifyElseCrash(false);
-#endif
 }
 
 IAsyncAction ReactNativeHost::UnloadInstance() noexcept {

@@ -13,12 +13,18 @@ test('Empty Manifest Invalid', () => {
 
 test('Well Formed No Overrides', () => {
   expect(Serialized.parseManifest('{"overrides": []}')).toEqual({
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [],
   });
 });
 
 test('Well Formed Platform', () => {
   const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
         type: 'platform',
@@ -32,6 +38,9 @@ test('Well Formed Platform', () => {
 
 test('Well Formed Patch', () => {
   const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
         type: 'patch',
@@ -47,8 +56,31 @@ test('Well Formed Patch', () => {
   expect(Serialized.parseManifest(JSON.stringify(manifest))).toEqual(manifest);
 });
 
+test('Well Formed Patch - Default Base', () => {
+  const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: '0.61.5',
+    overrides: [
+      {
+        type: 'patch',
+        file: 'foo.win32.js',
+        baseFile: 'foo.js',
+        baseVersion: undefined,
+        baseHash: 'AAAABBBB',
+        issue: 4567,
+      },
+    ],
+  };
+
+  expect(Serialized.parseManifest(JSON.stringify(manifest))).toEqual(manifest);
+});
+
 test('Well Formed Derived', () => {
   const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
         type: 'derived',
@@ -66,6 +98,9 @@ test('Well Formed Derived', () => {
 
 test('Well Formed Copy', () => {
   const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
         type: 'copy',
@@ -81,53 +116,24 @@ test('Well Formed Copy', () => {
   expect(Serialized.parseManifest(JSON.stringify(manifest))).toEqual(manifest);
 });
 
-test('Fixme Allowed As Issue', () => {
+test('Well Formed Directory Copy', () => {
   const manifest: Serialized.Manifest = {
+    includePatterns: undefined,
+    excludePatterns: undefined,
+    baseVersion: undefined,
     overrides: [
       {
-        type: 'patch',
-        file: 'foo.win32.js',
-        baseFile: 'foo.js',
+        type: 'copy',
+        directory: 'foo',
+        baseDirectory: 'src/foo',
         baseVersion: '0.61.5',
         baseHash: 'AAAABBBB',
-        issue: 'LEGACY_FIXME',
+        issue: 4567,
       },
     ],
   };
 
   expect(Serialized.parseManifest(JSON.stringify(manifest))).toEqual(manifest);
-});
-
-test('Issue Must Be Present For Patch', () => {
-  const manifest = {
-    overrides: [
-      {
-        type: 'patch',
-        file: 'foo.win32.js',
-        baseFile: 'foo.js',
-        baseVersion: '0.61.5',
-        baseHash: 'AAAABBBB',
-      },
-    ],
-  };
-
-  expect(() => Serialized.parseManifest(JSON.stringify(manifest))).toThrow();
-});
-
-test('Issue Must Be Present For Copy', () => {
-  const manifest = {
-    overrides: [
-      {
-        type: 'copy',
-        file: 'foo.win32.js',
-        baseFile: 'foo.js',
-        baseVersion: '0.61.5',
-        baseHash: 'AAAABBBB',
-      },
-    ],
-  };
-
-  expect(() => Serialized.parseManifest(JSON.stringify(manifest))).toThrow();
 });
 
 test('Issue Cannot Be Arbitrary String', () => {
@@ -184,4 +190,30 @@ test('Well Formed Copy Must Have Metadata', () => {
   };
 
   expect(() => Serialized.parseManifest(JSON.stringify(manifest))).toThrow();
+});
+
+test('Valid includePatterns', () => {
+  const includePatterns = ['src/**', 'copies/**'];
+
+  const manifest = {
+    includePatterns,
+    overrides: [],
+  };
+
+  expect(
+    Serialized.parseManifest(JSON.stringify(manifest)).includePatterns,
+  ).toEqual(includePatterns);
+});
+
+test('Valid excludePatterns', () => {
+  const excludePatterns = ['**/*.md', '**/README.md'];
+
+  const manifest = {
+    excludePatterns,
+    overrides: [],
+  };
+
+  expect(
+    Serialized.parseManifest(JSON.stringify(manifest)).excludePatterns,
+  ).toEqual(excludePatterns);
 });

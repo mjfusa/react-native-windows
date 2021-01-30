@@ -6,21 +6,11 @@
  */
 
 const fs = require('fs');
-const {task, series, eslintTask} = require('just-scripts');
+const {task} = require('just-scripts');
 
-task('eslint', () => {
-  return eslintTask();
-});
-task('eslint:fix', () => {
-  return eslintTask({fix: true});
-});
-
-task('lint', series('eslint'));
-task('lint:fix', series('eslint:fix'));
+// Use the shared base configuration
+require('@rnw-scripts/just-task');
 
 task('prepareBundleWin32', () => {
-  const file = 'windows/playground-win32/Bundle';
-  if (!fs.existsSync(file)) {
-    fs.mkdirSync(file);
-  }
+  fs.mkdirSync('windows/playground-win32/Bundle/Samples', {recursive: true});
 });

@@ -3,7 +3,7 @@
  * Licensed under the MIT License.
  *
  * @format
- * @flow
+ * @flow strict
  */
 
 'use strict';
@@ -20,6 +20,7 @@ export interface Spec extends TurboModule {
       patch: number,
       prerelease: ?number,
     |},
+    osVersion: number,
   |};
 }
 

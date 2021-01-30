@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
 #include "pch.h"
 #include "MemoryMappedBuffer.h"
 
@@ -38,15 +41,16 @@ MemoryMappedBuffer::MemoryMappedBuffer(const wchar_t *const filename, uint32_t o
   std::unique_ptr<void, decltype(&CloseHandle)> fileHandle{
       CreateFile2(filename, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, nullptr /* pCreateExParams */), &CloseHandle};
 #else
-  std::unique_ptr<void, decltype(&CloseHandle)> fileHandle{CreateFileW(
-                                                               filename,
-                                                               GENERIC_READ,
-                                                               FILE_SHARE_READ,
-                                                               nullptr /* lpSecurityAttributes */,
-                                                               OPEN_EXISTING,
-                                                               FILE_ATTRIBUTE_NORMAL,
-                                                               nullptr /* hTemplateFile */),
-                                                           &CloseHandle};
+  std::unique_ptr<void, decltype(&CloseHandle)> fileHandle{
+      CreateFileW(
+          filename,
+          GENERIC_READ,
+          FILE_SHARE_READ,
+          nullptr /* lpSecurityAttributes */,
+          OPEN_EXISTING,
+          FILE_ATTRIBUTE_NORMAL,
+          nullptr /* hTemplateFile */),
+      &CloseHandle};
 #endif
 
   if (fileHandle.get() == INVALID_HANDLE_VALUE) {

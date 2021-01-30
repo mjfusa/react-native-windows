@@ -1,1 +1,1 @@
-require('react-native-windows/RNTester');
+require('@react-native-windows/tester/js/RNTesterApp');

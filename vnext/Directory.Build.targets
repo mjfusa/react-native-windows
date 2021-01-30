@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
+  <!-- This import will noop when customer code is built. This import is here to help building the bits in the react-native-windows repository. -->
+  <Import Condition="Exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../')))" Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
   <!-- For build debugging purposes. -->
   <Target Name="Vars">
     <Message Text="General" />
@@ -43,8 +46,6 @@
     <Message Text="=> UnmergedWinmdDirectory  [$(UnmergedWinmdDirectory)]" />
     <Message Text="=> MergedWinmdDirectory    [$(MergedWinmdDirectory)]" />
     <Message Text="=> FollyDir                [$(FollyDir)]" />
-    <Message Text="=> JSI_Source              [$(JSI_Source)]" />
-    <Message Text="=> JSI_SourcePath          [$(JSI_SourcePath)]" />
     <Message Text="=> ReactNativeWindowsDir   [$(ReactNativeWindowsDir)]" />
     <Message Text="=> ReactNativeDir          [$(ReactNativeDir)]" />
     <Message Text="=> YogaDir                 [$(YogaDir)]" />

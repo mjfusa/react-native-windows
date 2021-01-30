@@ -9,7 +9,7 @@ using namespace boost::beast;
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 using boost::system::error_code;
-using Microsoft::React::Beast::Test::TestWebSocket;
+using Microsoft::React::Beast::Test::TestWebSocketResource;
 using std::future;
 using std::make_unique;
 using std::promise;
@@ -30,13 +30,13 @@ TEST_CLASS(BaseWebSocketTest){
   END_TEST_CLASS_ATTRIBUTE()
 
   TEST_METHOD(CreateAndSetHandlers){
-    auto ws = make_unique<TestWebSocket>(Url("ws://localhost"));
+    auto ws = make_unique<TestWebSocketResource>(Url("ws://localhost"));
 
     Assert::IsFalse(nullptr == ws);
     ws->SetOnConnect([]() {});
     ws->SetOnPing([]() {});
     ws->SetOnSend([](size_t length) {});
-    ws->SetOnMessage([](size_t length, const string &buffer) {});
+    ws->SetOnMessage([](size_t length, const string &buffer, bool isBinary) {});
     ws->SetOnClose([](CloseCode, const string &) {});
     ws->SetOnError([](const Error &error) {});
   }
@@ -44,7 +44,7 @@ TEST_CLASS(BaseWebSocketTest){
   TEST_METHOD(ConnectSucceeds) {
     string errorMessage;
     bool connected = false;
-    auto ws = make_unique<TestWebSocket>(Url("ws://localhost"));
+    auto ws = make_unique<TestWebSocketResource>(Url("ws://localhost"));
     ws->SetOnError([&errorMessage](Error err) { errorMessage = err.Message; });
     ws->SetOnConnect([&connected]() { connected = true; });
 
@@ -58,7 +58,7 @@ TEST_CLASS(BaseWebSocketTest){
   TEST_METHOD(ConnectFails) {
     string errorMessage;
     bool connected = false;
-    auto ws = make_unique<TestWebSocket>(Url("ws://localhost"));
+    auto ws = make_unique<TestWebSocketResource>(Url("ws://localhost"));
     ws->SetOnError([&errorMessage](Error err) { errorMessage = err.Message; });
     ws->SetOnConnect([&connected]() { connected = true; });
     ws->SetConnectResult([]() -> error_code {
@@ -78,7 +78,7 @@ TEST_CLASS(BaseWebSocketTest){
   TEST_METHOD(HandshakeFails) {
     string errorMessage;
     bool connected = false;
-    auto ws = make_unique<TestWebSocket>(Url("ws://localhost"));
+    auto ws = make_unique<TestWebSocketResource>(Url("ws://localhost"));
     ws->SetOnError([&errorMessage](Error err) { errorMessage = err.Message; });
     ws->SetOnConnect([&connected]() { connected = true; });
     ws->SetHandshakeResult([](string, string) -> error_code {
@@ -99,7 +99,7 @@ TEST_CLASS(BaseWebSocketTest){
     string errorMessage;
     promise<void> connected;
     bool closed = false;
-    auto ws = make_unique<TestWebSocket>(Url("ws://localhost"));
+    auto ws = make_unique<TestWebSocketResource>(Url("ws://localhost"));
     ws->SetOnError([&errorMessage](Error err) { errorMessage = err.Message; });
     ws->SetOnConnect([&connected]() { connected.set_value(); });
     ws->SetOnClose(

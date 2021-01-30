@@ -28,7 +28,7 @@ namespace SampleAppCS
             InstanceSettings.UseWebDebugger = false;
             InstanceSettings.UseFastRefresh = false;
 #else
-            JavaScriptMainModuleName = "index";
+            JavaScriptBundleFile = "index";
             InstanceSettings.UseWebDebugger = true;
             InstanceSettings.UseFastRefresh = true;
 #endif
@@ -42,8 +42,10 @@ namespace SampleAppCS
             InstanceSettings.Properties.Set(ReactPropertyBagHelper.GetName(null, "Prop1"), 43);
             InstanceSettings.Properties.Set(ReactPropertyBagHelper.GetName(null, "Prop2"), "Hello RNW!");
 
-            PackageProviders.Add(new ReactPackageProvider()); // Includes any modules in this project
-            PackageProviders.Add(new ReflectionReactPackageProvider<App>());
+            Microsoft.ReactNative.Managed.AutolinkedNativeModules.RegisterAutolinkedNativeModulePackages(PackageProviders); // Includes any autolinked modules
+
+            PackageProviders.Add(new Microsoft.ReactNative.Managed.ReactPackageProvider());
+            PackageProviders.Add(new SampleAppCS.ReactPackageProvider());
             PackageProviders.Add(new SampleLibraryCS.ReactPackageProvider());
             PackageProviders.Add(new SampleLibraryCpp.ReactPackageProvider());
 

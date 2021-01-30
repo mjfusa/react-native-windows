@@ -11,6 +11,7 @@ using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Networking::Sockets;
 
 using std::make_shared;
+using std::shared_ptr;
 using std::string;
 using winrt::event_token;
 using winrt::param::hstring;
@@ -27,14 +28,18 @@ IAsyncAction DoNothingAsync() {
 
 IAsyncAction ThrowAsync() {
   throw winrt::hresult_error(winrt::hresult(E_FAIL), L"Expected Failure");
+
+  co_return;
 }
 
 } // namespace
 
 namespace Microsoft::React::Test {
-
 TEST_CLASS (WinRTWebSocketResourceUnitTest) {
   TEST_METHOD(ConnectSucceeds) {
+    // Microsoft C++ Unit Test Framework does not properly log full test names.
+    Logger::WriteMessage("Microsoft::React::Test::WinRTWebSocketResourceUnitTest::ConnectSucceeds");
+
     bool connected = true;
     string errorMessage;
     auto imws{winrt::make<MockMessageWebSocket>()};
@@ -43,10 +48,6 @@ TEST_CLASS (WinRTWebSocketResourceUnitTest) {
     auto mws{imws.as<MockMessageWebSocket>()};
     // TODO: Mock Control()
     mws->Mocks.ConnectAsync = [](const Uri &) -> IAsyncAction { return DoNothingAsync(); };
-    mws->Mocks.MessageReceivedToken =
-        [](TypedEventHandler<MessageWebSocket, MessageWebSocketMessageReceivedEventArgs> const &) -> event_token {
-      return event_token{};
-    };
     mws->Mocks.Close = [](uint16_t, const hstring &) {};
 
     // Test APIs
@@ -62,12 +63,10 @@ TEST_CLASS (WinRTWebSocketResourceUnitTest) {
     Assert::IsTrue(connected);
   }
 
-  // TODO: Re-enable. Fails in x86|Release.
-  //      Hangs due to exception not being caught within WinRTWebSocketResource::PerformConnect.
   BEGIN_TEST_METHOD_ATTRIBUTE(ConnectFails)
-  TEST_IGNORE()
   END_TEST_METHOD_ATTRIBUTE()
   TEST_METHOD(ConnectFails) {
+    Logger::WriteMessage("Microsoft::React::Test::WinRTWebSocketResourceUnitTest::ConnectFails");
     bool connected = false;
     string errorMessage;
     auto imws{winrt::make<MockMessageWebSocket>()};
@@ -75,10 +74,6 @@ TEST_CLASS (WinRTWebSocketResourceUnitTest) {
     // Set up mocks
     auto mws{imws.as<MockMessageWebSocket>()};
     mws->Mocks.ConnectAsync = [](const Uri &) -> IAsyncAction { return ThrowAsync(); };
-    mws->Mocks.MessageReceivedToken =
-        [](TypedEventHandler<MessageWebSocket, MessageWebSocketMessageReceivedEventArgs> const &) -> event_token {
-      return event_token{};
-    };
     mws->Mocks.Close = [](uint16_t, const hstring &) {};
 
     // Test APIs
@@ -90,8 +85,21 @@ TEST_CLASS (WinRTWebSocketResourceUnitTest) {
     rc->Connect({}, {});
     rc->Close(CloseCode::Normal, {});
 
-    Assert::AreNotEqual({}, errorMessage);
+    Assert::AreEqual({"[0x80004005] Expected Failure"}, errorMessage);
     Assert::IsFalse(connected);
+  }
+
+  TEST_METHOD(InternalSocketThrowsHResult) {
+    Logger::WriteMessage("Microsoft::React::Test::WinRTWebSocketResourceUnitTest::InternalSocketThrowsHResult");
+    shared_ptr<WinRTWebSocketResource> rc;
+
+    auto lambda = [&rc]() mutable {
+      rc = make_shared<WinRTWebSocketResource>(
+          winrt::make<ThrowingMessageWebSocket>(), MockDataWriter{}, Uri{L"ws://host:0"}, CertExceptions{});
+    };
+
+    Assert::ExpectException<winrt::hresult_error>(lambda);
+    Assert::IsTrue(nullptr == rc);
   }
 };
 

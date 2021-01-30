@@ -28,16 +28,36 @@ MainPage::MainPage() {
     x_rootComponentNameCombo().IsEditable(true);
     x_entryPointCombo().IsEditable(true);
   }
+
+  // TODO: a way to determine which engines are actually available
+  x_engineChakra().IsEnabled(true);
+  x_engineHermes().IsEnabled(true);
+  x_engineV8().IsEnabled(true);
+
+  x_JsEngine().SelectedIndex(0);
 }
 
 void MainPage::OnLoadClick(
     Windows::Foundation::IInspectable const & /*sender*/,
     xaml::RoutedEventArgs const & /*args*/) {
   auto host = Host();
-  auto bundleFile = unbox_value<hstring>(x_entryPointCombo().SelectedItem().as<ComboBoxItem>().Content());
+
+  winrt::hstring bundleFile;
+
+  if (auto cbi = x_entryPointCombo().SelectedItem().try_as<ComboBoxItem>()) {
+    bundleFile = unbox_value<hstring>(cbi.Content());
+  } else {
+    bundleFile = unbox_value<hstring>(x_entryPointCombo().SelectedItem());
+  }
   host.InstanceSettings().JavaScriptBundleFile(bundleFile);
 
-  auto mainComponentName = unbox_value<hstring>(x_rootComponentNameCombo().SelectedItem().as<ComboBoxItem>().Content());
+  auto item = x_rootComponentNameCombo().SelectedItem();
+  winrt::hstring mainComponentName;
+  if (auto selected = item.try_as<ComboBoxItem>()) {
+    mainComponentName = unbox_value<hstring>(selected.Content());
+  } else {
+    mainComponentName = unbox_value<hstring>(item);
+  }
   ReactRootView().ComponentName(mainComponentName);
   ReactRootView().ReactNativeHost(host);
 
@@ -47,7 +67,38 @@ void MainPage::OnLoadClick(
   host.InstanceSettings().DebuggerBreakOnNextLine(x_BreakOnFirstLineCheckBox().IsChecked().GetBoolean());
   host.InstanceSettings().UseFastRefresh(x_UseFastRefreshCheckBox().IsChecked().GetBoolean());
   host.InstanceSettings().DebuggerPort(static_cast<uint16_t>(std::stoi(std::wstring(x_DebuggerPort().Text()))));
+  host.InstanceSettings().JSIEngineOverride(
+      static_cast<Microsoft::ReactNative::JSIEngine>(x_JsEngine().SelectedIndex()));
+  if (!m_bundlerHostname.empty()) {
+    host.InstanceSettings().DebugHost(m_bundlerHostname);
+  }
 
+  host.InstanceSettings().InstanceCreated(
+      [wkThis = get_weak()](auto sender, winrt::Microsoft::ReactNative::InstanceCreatedEventArgs args) {
+        if (auto strongThis = wkThis.get()) {
+          args.Context().UIDispatcher().Post([wkThis, context = args.Context()]() {
+            if (auto strongThis = wkThis.get()) {
+              strongThis->x_UseWebDebuggerCheckBox().IsChecked(context.SettingsSnapshot().UseWebDebugger());
+              strongThis->x_UseFastRefreshCheckBox().IsChecked(context.SettingsSnapshot().UseFastRefresh());
+              strongThis->x_UseDirectDebuggerCheckBox().IsChecked(context.SettingsSnapshot().UseDirectDebugger());
+              strongThis->x_BreakOnFirstLineCheckBox().IsChecked(context.SettingsSnapshot().DebuggerBreakOnNextLine());
+              auto debugBundlePath = context.SettingsSnapshot().DebugBundlePath();
+              for (auto item : strongThis->x_entryPointCombo().Items()) {
+                if (winrt::unbox_value<winrt::hstring>(item.as<ComboBoxItem>().Content()) == debugBundlePath) {
+                  strongThis->x_entryPointCombo().SelectedItem(item);
+                  break;
+                }
+              }
+              strongThis->x_DebuggerPort().Text(winrt::to_hstring(context.SettingsSnapshot().DebuggerPort()));
+              if (context.SettingsSnapshot().UseWebDebugger()) {
+                strongThis->RequestedTheme(xaml::ElementTheme::Light);
+              } else {
+                strongThis->RequestedTheme(xaml::ElementTheme::Default);
+              }
+            }
+          });
+        }
+      });
   // Nudge the ReactNativeHost to create the instance and wrapping context
   host.ReloadInstance();
 }
@@ -56,13 +107,27 @@ void winrt::playground::implementation::MainPage::x_entryPointCombo_SelectionCha
     winrt::Windows::Foundation::IInspectable const & /*sender*/,
     xaml::Controls::SelectionChangedEventArgs const & /*e*/) {
   if (x_rootComponentNameCombo()) {
-    auto bundleFile = unbox_value<hstring>(x_entryPointCombo().SelectedItem().as<ComboBoxItem>().Content());
-    if (std::wstring(bundleFile).compare(L"Samples\\rntester") == 0) {
-      x_rootComponentNameCombo().SelectedIndex(0);
-    } else {
-      x_rootComponentNameCombo().SelectedIndex(1);
+    auto item = x_entryPointCombo().SelectedItem();
+    if (item) {
+      winrt::IInspectable content;
+      if (auto cbi = item.try_as<ComboBoxItem>()) {
+        content = cbi.Content();
+      } else {
+        content = item;
+      }
+
+      auto selectedItem = winrt::to_string(winrt::unbox_value<winrt::hstring>(content));
+      if (selectedItem == "Samples\\rntester") {
+        x_rootComponentNameCombo().SelectedIndex(0);
+      } else {
+        x_rootComponentNameCombo().SelectedIndex(1);
+      }
     }
   }
+}
+
+void MainPage::OnNavigatedTo(xaml::Navigation::NavigationEventArgs const &e) {
+  m_bundlerHostname = unbox_value<hstring>(e.Parameter());
 }
 
 Microsoft::ReactNative::ReactNativeHost MainPage::Host() noexcept {

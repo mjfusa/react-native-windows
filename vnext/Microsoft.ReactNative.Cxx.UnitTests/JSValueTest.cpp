@@ -48,10 +48,10 @@ TEST_CLASS (JSValueTest) {
     TestCheck(intValue);
     TestCheck(doubleValue);
 
-    TestCheckEqual(1, objValue->size());
-    TestCheckEqual(1, jsValue["ObjValue"].PropertyCount());
-    TestCheckEqual(2, arrayValue->size());
-    TestCheckEqual(2, jsValue["ArrayValue"].ItemCount());
+    TestCheckEqual(1u, objValue->size());
+    TestCheckEqual(1u, jsValue["ObjValue"].PropertyCount());
+    TestCheckEqual(2u, arrayValue->size());
+    TestCheckEqual(2u, jsValue["ArrayValue"].ItemCount());
     TestCheckEqual("Hello", *stringValue);
     TestCheckEqual(true, *boolValue);
     TestCheckEqual(42, *intValue);
@@ -186,17 +186,18 @@ TEST_CLASS (JSValueTest) {
   }
 
   TEST_METHOD(TestObjectLiteral) {
-    JSValue jsValue = JSValueObject{{"NullValue1", nullptr},
-                                    {"NullValue2", JSValue::Null.Copy()},
-                                    {"ObjValue", JSValueObject{{"prop1", 2}}},
-                                    {"ObjValueEmpty", JSValue::EmptyObject.Copy()},
-                                    {"ArrayValue", JSValueArray{1, 2}},
-                                    {"ArrayValueEmpty", JSValue::EmptyArray.Copy()},
-                                    {"StringValue1", "Hello"},
-                                    {"StringValue2", JSValue::EmptyString.Copy()},
-                                    {"BoolValue", true},
-                                    {"IntValue", 42},
-                                    {"DoubleValue", 4.5}};
+    JSValue jsValue = JSValueObject{
+        {"NullValue1", nullptr},
+        {"NullValue2", JSValue::Null.Copy()},
+        {"ObjValue", JSValueObject{{"prop1", 2}}},
+        {"ObjValueEmpty", JSValue::EmptyObject.Copy()},
+        {"ArrayValue", JSValueArray{1, 2}},
+        {"ArrayValueEmpty", JSValue::EmptyArray.Copy()},
+        {"StringValue1", "Hello"},
+        {"StringValue2", JSValue::EmptyString.Copy()},
+        {"BoolValue", true},
+        {"IntValue", 42},
+        {"DoubleValue", 4.5}};
     TestCheckEqual(JSValueType::Object, jsValue.Type());
     TestCheckEqual(JSValueType::Null, jsValue["NullValue1"].Type());
     TestCheckEqual(JSValueType::Null, jsValue["NullValue2"].Type());
@@ -212,13 +213,13 @@ TEST_CLASS (JSValueTest) {
 
     TestCheck(jsValue["NullValue1"].IsNull());
     TestCheck(jsValue["NullValue2"].IsNull());
-    TestCheckEqual(1, jsValue["ObjValue"].PropertyCount());
+    TestCheckEqual(1u, jsValue["ObjValue"].PropertyCount());
     TestCheckEqual(2, jsValue["ObjValue"]["prop1"]);
-    TestCheckEqual(0, jsValue["ObjValueEmpty"].PropertyCount());
-    TestCheckEqual(2, jsValue["ArrayValue"].ItemCount());
+    TestCheckEqual(0u, jsValue["ObjValueEmpty"].PropertyCount());
+    TestCheckEqual(2u, jsValue["ArrayValue"].ItemCount());
     TestCheckEqual(1, jsValue["ArrayValue"][0]);
     TestCheckEqual(2, jsValue["ArrayValue"][1]);
-    TestCheckEqual(0, jsValue["ArrayValueEmpty"].ItemCount());
+    TestCheckEqual(0u, jsValue["ArrayValueEmpty"].ItemCount());
     TestCheckEqual("Hello", jsValue["StringValue1"]);
     TestCheckEqual("", jsValue["StringValue2"]);
     TestCheckEqual(true, jsValue["BoolValue"]);
@@ -228,15 +229,16 @@ TEST_CLASS (JSValueTest) {
   }
 
   TEST_METHOD(TestArrayLiteral) {
-    JSValue jsValue = JSValueArray{nullptr,
-                                   JSValueObject{{"prop1", 2}},
-                                   JSValueObject{},
-                                   JSValueArray{1, 2},
-                                   JSValueArray{},
-                                   "Hello",
-                                   true,
-                                   42,
-                                   4.5};
+    JSValue jsValue = JSValueArray{
+        nullptr,
+        JSValueObject{{"prop1", 2}},
+        JSValueObject{},
+        JSValueArray{1, 2},
+        JSValueArray{},
+        "Hello",
+        true,
+        42,
+        4.5};
 
     TestCheckEqual(JSValueType::Array, jsValue.Type());
     TestCheckEqual(JSValueType::Null, jsValue[0].Type());
@@ -250,13 +252,13 @@ TEST_CLASS (JSValueTest) {
     TestCheckEqual(JSValueType::Double, jsValue[8].Type());
 
     TestCheck(jsValue["NullValue"].IsNull());
-    TestCheckEqual(1, jsValue[1].PropertyCount());
+    TestCheckEqual(1u, jsValue[1].PropertyCount());
     TestCheckEqual(2, jsValue[1]["prop1"]);
-    TestCheckEqual(0, jsValue[2].PropertyCount());
-    TestCheckEqual(2, jsValue[3].ItemCount());
+    TestCheckEqual(0u, jsValue[2].PropertyCount());
+    TestCheckEqual(2u, jsValue[3].ItemCount());
     TestCheckEqual(1, jsValue[3][0]);
     TestCheckEqual(2, jsValue[3][1]);
-    TestCheckEqual(0, jsValue[4].ItemCount());
+    TestCheckEqual(0u, jsValue[4].ItemCount());
     TestCheckEqual("Hello", jsValue[5]);
     TestCheckEqual(true, jsValue[6]);
     TestCheckEqual(42, jsValue[7]);
@@ -290,16 +292,86 @@ TEST_CLASS (JSValueTest) {
     TestCheckEqual(JSValueType::Double, value11.Type());
 
     TestCheck(value01.IsNull());
-    TestCheckEqual(1, value02.TryGetObject()->size());
-    TestCheckEqual(0, value03.TryGetObject()->size());
-    TestCheckEqual(2, value04.TryGetArray()->size());
-    TestCheckEqual(0, value05.TryGetArray()->size());
+    TestCheckEqual(1u, value02.TryGetObject()->size());
+    TestCheckEqual(0u, value03.TryGetObject()->size());
+    TestCheckEqual(2u, value04.TryGetArray()->size());
+    TestCheckEqual(0u, value05.TryGetArray()->size());
     TestCheckEqual("Hello", *value06.TryGetString());
     TestCheckEqual(true, *value07.TryGetBoolean());
     TestCheckEqual(false, *value08.TryGetBoolean());
     TestCheckEqual(0, *value09.TryGetInt64());
     TestCheckEqual(42, *value10.TryGetInt64());
     TestCheckEqual(4.2, *value11.TryGetDouble());
+  }
+
+  TEST_METHOD(TestJSValueStdOptionalConstructor) {
+    auto value001 = JSValue{std::optional{nullptr}};
+    auto value002 = JSValue{std::optional{JSValueObject{{"prop1", 3}}}};
+    auto value003 = JSValue{std::optional{JSValueObject{}}};
+    auto value004 = JSValue{std::optional{JSValueArray{1, 2}}};
+    auto value005 = JSValue{std::optional{JSValueArray{}}};
+    auto value006 = JSValue{std::optional{"Hello"}};
+    auto value007 = JSValue{std::optional{true}};
+    auto value008 = JSValue{std::optional{false}};
+    auto value009 = JSValue{std::optional{0}};
+    auto value010 = JSValue{std::optional{42}};
+    auto value011 = JSValue{std::optional{4.2}};
+
+    TestCheckEqual(JSValueType::Null, value001.Type());
+    TestCheckEqual(JSValueType::Object, value002.Type());
+    TestCheckEqual(JSValueType::Object, value003.Type());
+    TestCheckEqual(JSValueType::Array, value004.Type());
+    TestCheckEqual(JSValueType::Array, value005.Type());
+    TestCheckEqual(JSValueType::String, value006.Type());
+    TestCheckEqual(JSValueType::Boolean, value007.Type());
+    TestCheckEqual(JSValueType::Boolean, value008.Type());
+    TestCheckEqual(JSValueType::Int64, value009.Type());
+    TestCheckEqual(JSValueType::Int64, value010.Type());
+    TestCheckEqual(JSValueType::Double, value011.Type());
+
+    TestCheck(value001.IsNull());
+    TestCheckEqual(1u, value002.TryGetObject()->size());
+    TestCheckEqual(0u, value003.TryGetObject()->size());
+    TestCheckEqual(2u, value004.TryGetArray()->size());
+    TestCheckEqual(0u, value005.TryGetArray()->size());
+    TestCheckEqual("Hello", *value006.TryGetString());
+    TestCheckEqual(true, *value007.TryGetBoolean());
+    TestCheckEqual(false, *value008.TryGetBoolean());
+    TestCheckEqual(0, *value009.TryGetInt64());
+    TestCheckEqual(42, *value010.TryGetInt64());
+    TestCheckEqual(4.2, *value011.TryGetDouble());
+
+    auto value101 = JSValue{std::nullopt};
+    TestCheckEqual(JSValueType::Null, value101.Type());
+    TestCheck(value101.IsNull());
+
+    auto value201 = JSValue{std::optional<std::nullptr_t>{std::nullopt}};
+    auto value202 = JSValue{std::optional<JSValueObject>{std::nullopt}};
+    auto value203 = JSValue{std::optional<JSValueArray>{std::nullopt}};
+    auto value204 = JSValue{std::optional<const char *>{std::nullopt}};
+    auto value205 = JSValue{std::optional<std::string>{std::nullopt}};
+    auto value206 = JSValue{std::optional<std::string_view>{std::nullopt}};
+    auto value207 = JSValue{std::optional<bool>{std::nullopt}};
+    auto value208 = JSValue{std::optional<int32_t>{std::nullopt}};
+    auto value209 = JSValue{std::optional<int64_t>{std::nullopt}};
+    auto value210 = JSValue{std::optional<uint32_t>{std::nullopt}};
+    auto value211 = JSValue{std::optional<uint64_t>{std::nullopt}};
+    auto value212 = JSValue{std::optional<double>{std::nullopt}};
+    auto value213 = JSValue{std::optional<float>{std::nullopt}};
+
+    TestCheckEqual(JSValueType::Null, value201.Type());
+    TestCheckEqual(JSValueType::Null, value202.Type());
+    TestCheckEqual(JSValueType::Null, value203.Type());
+    TestCheckEqual(JSValueType::Null, value204.Type());
+    TestCheckEqual(JSValueType::Null, value205.Type());
+    TestCheckEqual(JSValueType::Null, value206.Type());
+    TestCheckEqual(JSValueType::Null, value207.Type());
+    TestCheckEqual(JSValueType::Null, value208.Type());
+    TestCheckEqual(JSValueType::Null, value209.Type());
+    TestCheckEqual(JSValueType::Null, value210.Type());
+    TestCheckEqual(JSValueType::Null, value211.Type());
+    TestCheckEqual(JSValueType::Null, value212.Type());
+    TestCheckEqual(JSValueType::Null, value213.Type());
   }
 
   TEST_METHOD(TestJSValueImplicitCast) {
@@ -366,37 +438,37 @@ TEST_CLASS (JSValueTest) {
     TestCheckEqual(JSValueType::Double, value20.Type());
     TestCheckEqual(JSValueType::Double, value21.Type());
 
-    TestCheckEqual(3, value01.PropertyCount());
+    TestCheckEqual(3u, value01.PropertyCount());
     TestCheckEqual(nullptr, value01["prop1"]);
     TestCheckEqual(42, value01["prop2"]);
     TestCheckEqual("Hello", value01["prop3"]);
 
-    TestCheckEqual(3, value02.PropertyCount());
+    TestCheckEqual(3u, value02.PropertyCount());
     TestCheckEqual(nullptr, value02["prop1"]);
     TestCheckEqual(42, value02["prop2"]);
     TestCheckEqual("Hello", value02["prop3"]);
 
-    TestCheckEqual(1, value03.PropertyCount());
+    TestCheckEqual(1u, value03.PropertyCount());
     TestCheckEqual(3, value03["prop1"]);
 
-    TestCheckEqual(3, value04.ItemCount());
+    TestCheckEqual(3u, value04.ItemCount());
     TestCheckEqual(nullptr, value04[0]);
     TestCheckEqual(nullptr, value04[1]);
     TestCheckEqual(nullptr, value04[2]);
 
-    TestCheckEqual(1, value05.ItemCount());
+    TestCheckEqual(1u, value05.ItemCount());
     TestCheckEqual(3, value05[0]);
 
-    TestCheckEqual(2, value06.ItemCount());
+    TestCheckEqual(2u, value06.ItemCount());
     TestCheckEqual(42, value06[0]);
     TestCheckEqual(42, value06[1]);
 
-    TestCheckEqual(3, value07.ItemCount());
+    TestCheckEqual(3u, value07.ItemCount());
     TestCheckEqual(nullptr, value07[0]);
     TestCheckEqual(42, value07[1]);
     TestCheckEqual("Hello", value07[2]);
 
-    TestCheckEqual(3, value08.ItemCount());
+    TestCheckEqual(3u, value08.ItemCount());
     TestCheckEqual(nullptr, value08[0]);
     TestCheckEqual(42, value08[1]);
     TestCheckEqual("Hello", value08[2]);

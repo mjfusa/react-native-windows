@@ -111,6 +111,10 @@ struct ReactModuleBuilderMock {
 struct ReactContextMock : implements<ReactContextMock, IReactContext> {
   ReactContextMock(ReactModuleBuilderMock *builderMock) noexcept;
 
+  IReactSettingsSnapshot SettingsSnapshot() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
   IReactPropertyBag Properties() noexcept {
     VerifyElseCrashSz(false, "Not implemented");
   }
@@ -124,6 +128,10 @@ struct ReactContextMock : implements<ReactContextMock, IReactContext> {
   }
 
   IReactDispatcher JSDispatcher() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  IInspectable JSRuntime() noexcept {
     VerifyElseCrashSz(false, "Not implemented");
   }
 
@@ -141,6 +149,46 @@ struct ReactContextMock : implements<ReactContextMock, IReactContext> {
       hstring const &eventEmitterName,
       hstring const &eventName,
       JSValueArgWriter const &paramsArgWriter) noexcept;
+
+  uint16_t DebuggerPort() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool DebuggerBreakOnNextLine() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseDirectDebugger() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseFastRefresh() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  bool UseWebDebugger() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring DebugBundlePath() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring BundleRootPath() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring SourceBundleHost() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  uint16_t SourceBundlePort() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
+
+  hstring JavaScriptBundleFile() noexcept {
+    VerifyElseCrashSz(false, "Not implemented");
+  }
 
  private:
   ReactModuleBuilderMock *m_builderMock;
@@ -209,15 +257,14 @@ ReactModuleBuilderMock::CallSync(std::wstring const &methodName, TResult &result
   if (auto method = GetSyncMethod(methodName)) {
     auto writer = ArgWriter();
     method(ArgReader(std::forward<TArgs>(args)...), writer);
-    ReadArgs(MakeJSValueTreeReader(TakeJSValue(writer)), result);
+    ReadValue(MakeJSValueTreeReader(TakeJSValue(writer)), result);
   }
 }
 
 template <class... TArgs>
 inline /*static*/ IJSValueReader ReactModuleBuilderMock::ArgReader(TArgs &&... args) noexcept {
-  return CreateArgReader([&args...](IJSValueWriter const &writer) mutable noexcept {
-    WriteArgs(writer, std::forward<TArgs>(args)...);
-  });
+  return CreateArgReader(
+      [&args...](IJSValueWriter const &writer) mutable noexcept { WriteArgs(writer, std::forward<TArgs>(args)...); });
 }
 
 template <class... TArgs, size_t... I>
@@ -225,7 +272,7 @@ inline MethodResultCallback ReactModuleBuilderMock::ResolveCallback(
     std::function<void(TArgs...)> const &resolve,
     std::index_sequence<I...>,
     Mso::Promise<bool> const &promise) noexcept {
-  return [ this, resolve, promise ](IJSValueWriter const &writer) noexcept {
+  return [this, resolve, promise](IJSValueWriter const &writer) noexcept {
     std::tuple<RemoveConstRef<TArgs>...> args;
     ReadArgs(MakeJSValueTreeReader(TakeJSValue(writer)), std::get<I>(args)...);
     resolve(std::get<I>(args)...);
@@ -239,7 +286,7 @@ inline MethodResultCallback ReactModuleBuilderMock::RejectCallback(
     std::function<void(TArgs...)> const &reject,
     std::index_sequence<I...>,
     Mso::Promise<bool> const &promise) noexcept {
-  return [ this, reject, promise ](IJSValueWriter const &writer) noexcept {
+  return [this, reject, promise](IJSValueWriter const &writer) noexcept {
     std::tuple<RemoveConstRef<TArgs>...> args;
     ReadArgs(MakeJSValueTreeReader(TakeJSValue(writer)), std::get<I>(args)...);
     reject(std::get<I>(args)...);

@@ -3,38 +3,41 @@
 
 #include "pch.h"
 #include <NativeModules.h>
+#include "MockReactPackageProvider.h"
+#include "TestEventService.h"
+#include "TestReactNativeHostHolder.h"
 
-using namespace React;
+using namespace winrt;
+using namespace Microsoft::ReactNative;
 
 namespace ReactNativeIntegrationTests {
+
+// Use anonymous namespace to avoid any linking conflicts
+namespace {
 
 REACT_MODULE(TestHostModule)
 struct TestHostModule {
   REACT_INIT(Initialize)
   void Initialize(ReactContext const & /*reactContext*/) noexcept {
-    TestHostModule::Instance.set_value(*this);
+    TestEventService::LogEvent("initialize", nullptr);
   }
 
   REACT_FUNCTION(addValues, L"addValues", L"TestHostModuleFunctions")
   std::function<void(int a, int b)> addValues;
 
-  REACT_METHOD(Start, L"start")
-  void Start() noexcept {
-    // Native modules are created on-demand.
-    // This method is used to start loading the module from JavaScript.
+  REACT_METHOD(StartTests, L"startTests")
+  void StartTests() noexcept {
+    TestEventService::LogEvent("start tests", nullptr);
+
+    TestEventService::LogEvent("call addValues", JSValueArray{4, 7});
+    addValues(4, 7);
   }
 
-  REACT_METHOD(ReturnInt, L"returnInt")
-  void ReturnInt(int value) noexcept {
-    TestHostModule::IntReturnValue.set_value(value);
+  REACT_METHOD(ReturnResult, L"returnResult")
+  void ReturnResult(JSValue value) noexcept {
+    TestEventService::LogEvent("return result", std::move(value));
   }
-
-  static std::promise<TestHostModule &> Instance;
-  static std::promise<int> IntReturnValue;
 };
-
-std::promise<TestHostModule &> TestHostModule::Instance;
-std::promise<int> TestHostModule::IntReturnValue;
 
 struct TestPackageProvider : winrt::implements<TestPackageProvider, IReactPackageProvider> {
   void CreatePackage(IReactPackageBuilder const &packageBuilder) noexcept {
@@ -42,42 +45,49 @@ struct TestPackageProvider : winrt::implements<TestPackageProvider, IReactPackag
   }
 };
 
+} // namespace
+
 TEST_CLASS (ReactNativeHostTests) {
   TEST_METHOD(Activation_Succeeds) {
     TestCheckNoThrow(winrt::Microsoft::ReactNative::ReactNativeHost{});
   }
 
-  SKIPTESTMETHOD(JsFunctionCall_Succeeds) {
-    std::future<TestHostModule &> testHostModule = TestHostModule::Instance.get_future();
-    std::future<int> returnValue = TestHostModule::IntReturnValue.get_future();
+  TEST_METHOD(PackageProviders_AsConstructed_IsEmpty) {
+    ReactNativeHost host{};
+    TestCheckEqual(0u, host.PackageProviders().Size());
+  }
 
-    winrt::Microsoft::ReactNative::ReactNativeHost host{};
+  TEST_METHOD(PackageProviders_Append_ReflectsAddition) {
+    ReactNativeHost host{};
+    IReactPackageProvider packageProvider = ::winrt::make<MockReactPackageProvider>();
+    host.PackageProviders().Append(packageProvider);
+    TestCheckEqual(1u, host.PackageProviders().Size());
+  }
 
-    auto queueController = winrt::Windows::System::DispatcherQueueController::CreateOnDedicatedThread();
-    queueController.DispatcherQueue().TryEnqueue([&]() noexcept {
+  TEST_METHOD(InstanceSettings_BundleRootPathAsConstructed_IsEmpty) {
+    ReactNativeHost host{};
+    TestCheck(host.InstanceSettings().BundleRootPath().empty());
+  }
+
+  TEST_METHOD(InstanceSettings_BundleRootPathAsAssigned_MatchesAssignedValue) {
+    const wchar_t *path = L"a/b/c";
+    ReactNativeHost host{};
+    host.InstanceSettings().BundleRootPath(path);
+    TestCheckEqual(path, host.InstanceSettings().BundleRootPath());
+  }
+
+  TEST_METHOD(Run_JSDrivenTests) {
+    TestEventService::Initialize();
+
+    auto reactNativeHost = TestReactNativeHostHolder(L"ReactNativeHostTests", [](ReactNativeHost const &host) noexcept {
       host.PackageProviders().Append(winrt::make<TestPackageProvider>());
-
-      // bundle is assumed to be co-located with the test binary
-      wchar_t testBinaryPath[MAX_PATH];
-      TestCheck(GetModuleFileNameW(NULL, testBinaryPath, MAX_PATH) < MAX_PATH);
-      testBinaryPath[std::wstring_view{testBinaryPath}.rfind(L"\\")] = 0;
-
-      host.InstanceSettings().BundleRootPath(testBinaryPath);
-      host.InstanceSettings().JavaScriptBundleFile(L"AddValues");
-      host.InstanceSettings().UseDeveloperSupport(false);
-      host.InstanceSettings().UseWebDebugger(false);
-      host.InstanceSettings().UseFastRefresh(false);
-      host.InstanceSettings().UseLiveReload(false);
-      host.InstanceSettings().EnableDeveloperMenu(false);
-
-      host.LoadInstance();
     });
 
-    testHostModule.get().addValues(12, 23);
-    TestCheckEqual(35, returnValue.get());
-
-    host.UnloadInstance().get();
-    queueController.ShutdownQueueAsync().get();
+    TestEventService::ObserveEvents(
+        {TestEvent{"initialize", nullptr},
+         TestEvent{"start tests", nullptr},
+         TestEvent{"call addValues", JSValueArray{4, 7}},
+         TestEvent{"return result", 11}});
   }
 };
 

@@ -6,29 +6,23 @@
 
 #include <DevSettings.h>
 #include <InstanceManager.h>
+#include <RuntimeOptions.h>
 #include <cxxreact/Instance.h>
 #include "TestInstance.h"
 #include "TestModule.h"
 
-#include <objbase.h>
-#include <locale>
-
-#include <boost/exception/all.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 using namespace facebook::react;
 using namespace facebook::xplat::module;
 using namespace folly;
 
 using std::make_shared;
-using std::make_tuple;
-using std::make_unique;
-using std::move;
 using std::shared_ptr;
 using std::string;
 using std::tuple;
 using std::unique_ptr;
 using std::vector;
-using std::wstring;
 
 namespace Microsoft::React::Test {
 
@@ -41,6 +35,23 @@ void TestRunner::AwaitEvent(HANDLE &event, TestResult &result) {
 
 TestRunner::TestRunner() {}
 
+struct TestRedBoxHandler : Mso::React::IRedBoxHandler {
+  TestRedBoxHandler(std::function<void(Mso::React::ErrorInfo &&, Mso::React::ErrorType)> &&OnErrorFn)
+      : m_onErrorFn(std::move(OnErrorFn)) {}
+
+  void showNewError(Mso::React::ErrorInfo &&info, Mso::React::ErrorType type) override {
+    m_onErrorFn(std::move(info), type);
+  }
+  bool isDevSupportEnabled() const override {
+    return true;
+  }
+  void updateError(Mso::React::ErrorInfo &&) override {}
+  void dismissRedbox() override {}
+
+ private:
+  std::function<void(Mso::React::ErrorInfo &&, Mso::React::ErrorType)> m_onErrorFn;
+};
+
 TestResult TestRunner::RunTest(string &&bundlePath, string &&appName, NativeLoggingHook &&loggingCallback) {
   // Set up
   HANDLE functionCalled = CreateEvent(
@@ -49,33 +60,42 @@ TestResult TestRunner::RunTest(string &&bundlePath, string &&appName, NativeLogg
       /* bInitialState     */ FALSE,
       /* lpName            */ nullptr);
   assert(functionCalled != NULL);
-  TestResult result{TestStatus::Pending, wstring()};
+  TestResult result{TestStatus::Pending, {} /*message*/};
 
   try {
     // TODO: Defer MessageQueueThread creation to variant implementations
     // (Win32, WinRT).
     vector<tuple<string, CxxModule::Provider>> modules{
-        make_tuple(TestModule::name, [this, &result, &functionCalled]() -> unique_ptr<CxxModule> {
-          return make_unique<TestModule>([this, &result, &functionCalled](bool success) {
-            if (TestStatus::Pending != result.Status)
-              return;
+        {TestModule::name, [this, &result, &functionCalled]() -> unique_ptr<CxxModule> {
+           return std::make_unique<TestModule>([this, &result, &functionCalled](bool success) {
+             if (TestStatus::Pending != result.Status)
+               return;
 
-            result.Status = success ? TestStatus::Passed : TestStatus::Failed;
-            result.Message = L"markTestSucceeded(false)";
-            ::SetEvent(functionCalled);
-          });
-        })};
+             result.Status = success ? TestStatus::Passed : TestStatus::Failed;
+             result.Message = L"markTestSucceeded(false)";
+             ::SetEvent(functionCalled);
+           });
+         }}};
 
     // Note, further configuration should be done in each Windows variant's
     // TestRunner implementation.
     shared_ptr<DevSettings> devSettings = make_shared<DevSettings>();
-    devSettings->useWebDebugger = false; // WebSocketJSExecutor can't register native log hooks.
-    devSettings->debugHost = "localhost:8081";
+    devSettings->useWebDebugger = GetRuntimeOptionBool("RNTester.UseWebDebugger");
     devSettings->liveReloadCallback = []() {}; // Enables ChakraExecutor
     devSettings->errorCallback = [&result](string message) {
       result.Message = Microsoft::Common::Unicode::Utf8ToUtf16(message);
       result.Status = TestStatus::Failed;
     };
+    devSettings->redboxHandler =
+        make_shared<TestRedBoxHandler>([&result](Mso::React::ErrorInfo &&info, Mso::React::ErrorType) {
+          // The logging test fires this error by design, which shouldn't fail the tests
+          if (info.Message.find("console.error: This is from console.error") != string::npos) {
+            return;
+          }
+
+          result.Message = Microsoft::Common::Unicode::Utf8ToUtf16(info.Message);
+          result.Status = TestStatus::Failed;
+        });
     devSettings->loggingCallback = std::move(loggingCallback);
 
     // React instance scope
@@ -103,7 +123,10 @@ TestResult TestRunner::RunTest(string &&bundlePath, string &&appName, NativeLogg
         }
       });
 
-      instance->AttachMeasuredRootView(move(appName));
+      const int rootTag = 101;
+      dynamic params =
+          dynamic::array(std::move(appName), dynamic::object("initialProps", dynamic::object())("rootTag", rootTag));
+      instance->GetInnerInstance()->callJSFunction("AppRegistry", "runApplication", std::move(params));
 
       // Failure on instance creation.
       if (TestStatus::Failed == result.Status)
@@ -111,7 +134,8 @@ TestResult TestRunner::RunTest(string &&bundlePath, string &&appName, NativeLogg
 
       AwaitEvent(functionCalled, result);
 
-      instance->DetachRootView();
+      instance->GetInnerInstance()->callJSFunction(
+          "AppRegistry", "unmountApplicationComponentAtRootTag", std::move(dynamic::array(rootTag)));
     }
 
     // Tear down

@@ -1,9 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
+// IMPORTANT: Before updating this file
+// please read react-native-windows repo:
+// vnext/Microsoft.ReactNative.Cxx/README.md
 
 #include "pch.h"
 #include "JsiWriter.h"
+#ifdef __APPLE__
+#include "Crash.h"
+#else
 #include <crash/verifyElseCrash.h>
+#include "JsiReader.h"
+#endif
 
 namespace winrt::Microsoft::ReactNative {
 
@@ -17,7 +25,23 @@ JsiWriter::JsiWriter(facebook::jsi::Runtime &runtime) noexcept : m_runtime(runti
 
 facebook::jsi::Value JsiWriter::MoveResult() noexcept {
   VerifyElseCrash(m_containers.size() == 0);
-  return std::move(m_result);
+  if (m_resultAsContainer.has_value()) {
+    m_resultAsValue = ContainerToValue(std::move(ReadOptional(m_resultAsContainer)));
+    m_resultAsContainer.reset();
+  }
+  return std::move(ReadOptional(m_resultAsValue));
+}
+
+void JsiWriter::AccessResultAsArgs(const facebook::jsi::Value *&args, size_t &count) noexcept {
+  VerifyElseCrash(m_resultAsContainer.has_value());
+  auto &container = ReadOptional(m_resultAsContainer);
+  if (container.CurrentArrayElements.size() == 0) {
+    args = nullptr;
+    count = 0;
+  } else {
+    args = &container.CurrentArrayElements[0];
+    count = container.CurrentArrayElements.size();
+  }
 }
 
 void JsiWriter::WriteNull() noexcept {
@@ -57,7 +81,7 @@ void JsiWriter::WritePropertyName(const winrt::hstring &name) noexcept {
 void JsiWriter::WriteObjectEnd() noexcept {
   // legal to finish an object only when AcceptPropertyName
   VerifyElseCrash(Top().State == ContainerState::AcceptPropertyName);
-  WriteValue(Pop().CurrentObject.value());
+  WriteContainer(Pop());
 }
 
 void JsiWriter::WriteArrayBegin() noexcept {
@@ -68,22 +92,42 @@ void JsiWriter::WriteArrayBegin() noexcept {
 
 void JsiWriter::WriteArrayEnd() noexcept {
   // legal to finish an array only when AcceptArrayElement
-  auto &top = Top();
-  VerifyElseCrash(top.State == ContainerState::AcceptArrayElement);
+  VerifyElseCrash(Top().State == ContainerState::AcceptArrayElement);
+  WriteContainer(Pop());
+}
 
-  facebook::jsi::Array createdArray(m_runtime, top.CurrentArrayElements.size());
-  for (size_t i = 0; i < top.CurrentArrayElements.size(); i++) {
-    createdArray.setValueAtIndex(m_runtime, i, std::move(top.CurrentArrayElements.at(i)));
+facebook::jsi::Value JsiWriter::ContainerToValue(Container &&container) noexcept {
+  switch (container.State) {
+    case ContainerState::AcceptPropertyName: {
+      return std::move(ReadOptional(container.CurrentObject));
+    }
+    case ContainerState::AcceptArrayElement: {
+      facebook::jsi::Array createdArray(m_runtime, container.CurrentArrayElements.size());
+      for (size_t i = 0; i < container.CurrentArrayElements.size(); i++) {
+        createdArray.setValueAtIndex(m_runtime, i, std::move(container.CurrentArrayElements.at(i)));
+      }
+      return std::move(createdArray);
+    }
+    default:
+      VerifyElseCrash(false);
   }
-  Pop();
-  WriteValue({m_runtime, createdArray});
+}
+
+void JsiWriter::WriteContainer(Container &&container) noexcept {
+  if (Top().State == ContainerState::AcceptValueAndFinish && container.State == ContainerState::AcceptArrayElement) {
+    m_resultAsContainer.emplace(std::move(container));
+    Pop();
+    VerifyElseCrash(m_containers.size() == 0);
+  } else {
+    WriteValue(ContainerToValue(std::move(container)));
+  }
 }
 
 void JsiWriter::WriteValue(facebook::jsi::Value &&value) noexcept {
   auto &top = Top();
   switch (top.State) {
     case ContainerState::AcceptValueAndFinish: {
-      m_result = std::move(value);
+      m_resultAsValue = std::move(value);
       Pop();
       VerifyElseCrash(m_containers.size() == 0);
       break;
@@ -93,7 +137,7 @@ void JsiWriter::WriteValue(facebook::jsi::Value &&value) noexcept {
       break;
     }
     case ContainerState::AcceptPropertyValue: {
-      auto &createdObject = top.CurrentObject.value();
+      auto &createdObject = ReadOptional(top.CurrentObject);
       createdObject.setProperty(m_runtime, top.PropertyName.c_str(), std::move(value));
       top.State = ContainerState::AcceptPropertyName;
       top.PropertyName = {};

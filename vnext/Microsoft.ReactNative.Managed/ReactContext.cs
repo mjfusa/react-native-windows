@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+#if !USE_WINUI3
 using Windows.UI.Xaml;
+#else
+using Microsoft.UI.Xaml;
+#endif
 
 namespace Microsoft.ReactNative.Managed
 {
@@ -19,11 +23,11 @@ namespace Microsoft.ReactNative.Managed
       var argWriter = arg as JSValueArgWriter;
       if (argWriter != null)
       {
-        Handle.DispatchEvent(view, eventName, argWriter);
+        XamlUIService.FromContext(Handle).DispatchEvent(view, eventName, argWriter);
       }
       else
       {
-        Handle.DispatchEvent(view, eventName, (IJSValueWriter writer) => writer.WriteValue(arg));
+        XamlUIService.FromContext(Handle).DispatchEvent(view, eventName, (IJSValueWriter writer) => writer.WriteValue(arg));
       }
     }
 
