@@ -4,9 +4,9 @@
   <PropertyGroup Label="Globals">
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <MinimalCoreWin>true</MinimalCoreWin>
-    <ProjectGuid>{93f7572c-64b9-4096-9ef9-6ba0ede2b50d}</ProjectGuid>
-    <ProjectName>SampleAppCpp</ProjectName>
-    <RootNamespace>SampleAppCpp</RootNamespace>
+    <ProjectGuid>{7DC4532B-A500-43DA-94B9-26799B5C1FD0}</ProjectGuid>
+    <ProjectName>MainApp</ProjectName>
+    <RootNamespace>MainApp</RootNamespace>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <AppContainerApplication>true</AppContainerApplication>
@@ -81,7 +81,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros">
     <PackageCertificateThumbprint>86796DBBD88E7950574258FEA977ACB563AB5A09</PackageCertificateThumbprint>
-    <PackageCertificateKeyFile>SampleAppCpp_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>MainApp_TemporaryKey.pfx</PackageCertificateKeyFile>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -111,7 +111,6 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="DebugConsole.h" />
     <ClInclude Include="MainPage.h">
       <DependentUpon>MainPage.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -133,7 +132,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="packages.config" />
-    <None Include="SampleAppCpp_TemporaryKey.pfx" />
+    <None Include="MainApp_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\LockScreenLogo.scale-200.png" />
@@ -175,17 +174,14 @@
     </Text>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SampleLibraryCpp\SampleLibraryCpp.vcxproj">
-      <Project>{47eec7f3-40d3-49ba-82c1-eaf103b54215}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\SampleLibraryCS\SampleLibraryCS.csproj">
-      <Project>{c0a6bd9c-3ee5-4b12-8ce4-cee95178539c}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Page Include="MainPage.xaml">
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NativeModule\windows\NativeModule.vcxproj">
+      <Project>{2946b6fe-e53c-4701-b875-08f97cbdbcd9}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ReactNativeWindowsTargets">

@@ -12,7 +12,6 @@ struct App : AppT<App> {
 
  private:
   using super = AppT<App>;
-  bool IsPackageInstalled(std::wstring_view moduleName);
 };
 
 } // namespace winrt::SampleAppCpp::implementation

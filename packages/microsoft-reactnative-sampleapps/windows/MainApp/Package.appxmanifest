@@ -6,7 +6,7 @@
     Version="1.0.0.0" />
   <mp:PhoneIdentity PhoneProductId="f7f3bd52-47fc-4b10-820c-d21716a92eff" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
   <Properties>
-    <DisplayName>SampleAppCpp</DisplayName>
+    <DisplayName>MainApp</DisplayName>
     <PublisherDisplayName>react-native-windows-testing</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
@@ -17,8 +17,8 @@
     <Resource Language="x-generate" />
   </Resources>
   <Applications>
-    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="SampleAppCpp.App">
-      <uap:VisualElements DisplayName="SampleAppCpp" Description="Project for a basic C++ React Native app based on the C++ implementation."
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="MainApp.App">
+      <uap:VisualElements DisplayName="MainApp" Description="Project for a basic C++ React Native app based on the C++ implementation."
         Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" BackgroundColor="transparent">
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png">
         </uap:DefaultTile>
@@ -26,8 +26,8 @@
       </uap:VisualElements>
       <Extensions>
         <uap:Extension Category="windows.protocol">
-          <uap:Protocol Name="rn-sample-app-cpp">
-            <uap:DisplayName>RN Sample URI Scheme</uap:DisplayName>
+          <uap:Protocol Name="mainapp">
+            <uap:DisplayName>MainApp URI Scheme</uap:DisplayName>
           </uap:Protocol>
         </uap:Extension>
       </Extensions>

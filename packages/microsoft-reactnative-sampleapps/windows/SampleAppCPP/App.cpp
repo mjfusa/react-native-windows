@@ -9,11 +9,8 @@
 #include <CppWinRTIncludes.h>
 #include <ReactPackageProvider.h>
 #include <ReactPropertyBag.h>
-//#include <winrt/SampleLibraryCS.h>
+#include <winrt/SampleLibraryCS.h>
 #include <winrt/SampleLibraryCpp.h>
-
-#include <winrt/NativeUICtrl.h>
-#include <headers/DeviceInfo2.h>
 
 using namespace winrt;
 using namespace xaml;
@@ -52,24 +49,9 @@ App::App() noexcept {
 
   PackageProviders().Append(make<ReactPackageProvider>()); // Includes all modules in this project
   PackageProviders().Append(winrt::SampleLibraryCpp::ReactPackageProvider());
-  if (IsPackageInstalled(L"DeviceInfo2.dll"))
-    PackageProviders().Append(winrt::DeviceInfo2::ReactPackageProvider());
-  if (IsPackageInstalled(L"NativeUICtrl.dll")) 
-    PackageProviders().Append(winrt::NativeUICtrl::ReactPackageProvider());
-
-
-  //PackageProviders().Append(winrt::SampleLibraryCS::ReactPackageProvider());
+  PackageProviders().Append(winrt::SampleLibraryCS::ReactPackageProvider());
 
   InitializeComponent();
-}
-
-bool App::IsPackageInstalled(std::wstring_view moduleName) {
-  auto library = LoadPackagedLibrary(moduleName.data(), 0);
-  if (library) {
-    FreeLibrary(library);
-    return true;
-  }
-  return false;
 }
 
 /// <summary>
