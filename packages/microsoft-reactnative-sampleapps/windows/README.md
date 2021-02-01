@@ -106,7 +106,7 @@ In order to trigger the task when app is not running add debug it you can use th
 See Project | Properties | Debugging
 
 Change 'Launch Application' from **'Yes'** to **'No'**.
-![Project Properties Debugger](.\ProjectPropertiesDebugger.png)
+![Project Properties Debugger](./ProjectPropertiesDebugger.png)
 
 Set a breakpoint in ```App::OnBackgroundActivated()``` in ```App.cpp```.
 
@@ -116,7 +116,7 @@ Now you need to **trigger the background task**. There are two ways to do this:
 
 1) The name of the background task we registered is 'BackgroundRefreshData'. You can select this from the Life Cycle events menu in the Visual Studio toolbar:
 
-![Project Properties Debugger](.\BackgroundRefreshData.png)
+![Project Properties Debugger](./BackgroundRefreshData.png)
 
 2) Change the Time Zone settings in Windows. Search for 'Change the Time Zone' in the Start menu. Change to any time zone. Don't forget to change this back to your time zone!
 
