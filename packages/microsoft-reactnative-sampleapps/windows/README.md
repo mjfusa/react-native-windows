@@ -97,3 +97,32 @@ Not Running - ![Not Working](./Location_dot_yellow16.png) Not Working
 
 The app should be able to complete its background task without having to display any UI. Status: Not completed. 
 
+### Debugging the Background task
+
+Note that you'll need to run the app at least once, it order to register the background task. The sample is register with the Time Zone changed trigger.
+
+In order to trigger the task when app is not running add debug it you can use the feature in Visual Studio that allows you to start the Debugger, but not the app. 
+
+See Project | Properties | Debugging
+
+Change 'Launch Application' from **'Yes'** to **'No'**.
+![Project Properties Debugger](.\ProjectPropertiesDebugger.png)
+
+Set a breakpoint in ```App::OnBackgroundActivated()``` in ```App.cpp```.
+
+Then Start the app with Debugging (F5). The debugger will start, but the app will not.
+
+Now you need to **trigger the background task**. There are two ways to do this:
+
+1) The name of the background task we registered is 'BackgroundRefreshData'. You can select this from the Life Cycle events menu in the Visual Studio toolbar:
+
+![Project Properties Debugger](.\BackgroundRefreshData.png)
+
+2) Change the Time Zone settings in Windows. Search for 'Change the Time Zone' in the Start menu. Change to any time zone. Don't forget to change this back to your time zone!
+
+Once triggered, the app will break where you set your breakpoint. Note that the UI of the app is not displayed. This is the expected behaviour as all code run in the background is UI-less by definition.
+
+
+
+
+
