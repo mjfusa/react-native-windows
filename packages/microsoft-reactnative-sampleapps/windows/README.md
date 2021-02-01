@@ -116,7 +116,7 @@ Now you need to **trigger the background task**. There are two ways to do this:
 
 1) The name of the background task we registered is 'BackgroundRefreshData'. You can select this from the Life Cycle events menu in the Visual Studio toolbar:
 
-![Project Properties Debugger](./BackgroundRefreshData.png)
+![Project Properties Debugger](./backgroundrefreshdata.png)
 
 2) Change the Time Zone settings in Windows. Search for 'Change the Time Zone' in the Start menu. Change to any time zone. Don't forget to change this back to your time zone!
 
