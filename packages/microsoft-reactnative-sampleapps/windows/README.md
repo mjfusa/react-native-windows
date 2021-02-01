@@ -122,6 +122,8 @@ Now you need to **trigger the background task**. There are two ways to do this:
 
 Once triggered, the app will break where you set your breakpoint. Note that the UI of the app is not displayed. This is the expected behaviour as all code run in the background is UI-less by definition.
 
+More information here: <a href='https://docs.microsoft.com/en-us/visualstudio/debugger/how-to-trigger-suspend-resume-and-background-events-for-windows-store-apps-in-visual-studio?view=vs-2019'>Trigger suspend/resume/background events when debugging UWP - Visual Studio | Microsoft Docs</a>
+
 
 
 
