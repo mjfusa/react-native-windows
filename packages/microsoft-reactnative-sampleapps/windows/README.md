@@ -103,7 +103,7 @@ Note that you'll need to run the app at least once, it order to register the bac
 
 As mentioned above, the background task can be triggered and the task run if the app is running in the foreground, background or suspended. The following step is only required the sceanrio of testing app activation when the app is not running. Currently there is a known issue blocking this scenario.  You can skip to ```Trigger the Background task``` below until this is working.
 
-In order to trigger background the task when app is not running add debug it you can use the feature in Visual Studio that allows you to start the Debugger, but not the app. 
+In order to trigger background the task when app is not running, you can use the feature in Visual Studio that allows you to start the Debugger, but not the app. 
 
 See Project | Properties | Debugging
 
