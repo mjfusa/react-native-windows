@@ -99,9 +99,11 @@ The app should be able to complete its background task without having to display
 
 ### Debugging the Background task
 
-Note that you'll need to run the app at least once, it order to register the background task. The sample is register with the Time Zone changed trigger.
+Note that you'll need to run the app at least once, it order to register the background task. The sample registers the <a href='https://docs.microsoft.com/en-us/uwp/api/Windows.ApplicationModel.Background.SystemTrigger?view=winrt-19041'>Time Zone changed trigger</a>.
 
-In order to trigger the task when app is not running add debug it you can use the feature in Visual Studio that allows you to start the Debugger, but not the app. 
+As mentioned above, the background task can be triggered and the task run if the app is running in the foreground, background or suspended. The following step is only required the sceanrio of testing app activation when the app is not running. Currently there is a known issue blocking this scenario.  You can skip to ```Trigger the Background task``` below until this is working.
+
+In order to trigger background the task when app is not running add debug it you can use the feature in Visual Studio that allows you to start the Debugger, but not the app. 
 
 See Project | Properties | Debugging
 
@@ -111,6 +113,8 @@ Change 'Launch Application' from **'Yes'** to **'No'**.
 Set a breakpoint in ```App::OnBackgroundActivated()``` in ```App.cpp```.
 
 Then Start the app with Debugging (F5). The debugger will start, but the app will not.
+
+### Trigger the Background task
 
 Now you need to **trigger the background task**. There are two ways to do this:
 
