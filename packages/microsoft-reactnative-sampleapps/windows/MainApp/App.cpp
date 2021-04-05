@@ -93,31 +93,9 @@ void App::OnBackgroundActivated(winrt::Windows::ApplicationModel::Activation::Ba
   auto taskInstance = args.TaskInstance();
   BackgroundTaskDeferral deferral = taskInstance.GetDeferral();
   auto taskName = winrt::to_hstring(taskInstance.Task().Name());
-  
-  auto host = Host();
-  if (Window::Current().Content().as<Frame>() == nullptr) {
-    host.LoadInstance();
-    host.InstanceSettings().InstanceLoaded(
-        [wkThis = get_weak(), host, taskName](
-            auto sender, winrt::Microsoft::ReactNative::InstanceLoadedEventArgs args) {
-          if (auto strongThis = wkThis.get()) {
-            auto eventPropName = ReactPropertyBagHelper::GetName(nullptr, L"TaskNameProperty");
-            IReactPropertyBag pb{ReactPropertyBagHelper::CreatePropertyBag()};
-            pb.Set(eventPropName, box_value(taskName));
-
-            auto rns = host.InstanceSettings().Notifications();
-            rns.SendNotification(backgroundNotificationId.Handle(), box_value(pb), box_value(42));
-          }
-        });
-  } else {
-    // Send background task name (as defined in registration) to native module handler
-    auto eventPropName = ReactPropertyBagHelper::GetName(nullptr, L"TaskNameProperty");
-    IReactPropertyBag pb{ReactPropertyBagHelper::CreatePropertyBag()};
-    pb.Set(eventPropName, box_value(taskName));
 
     auto rns = InstanceSettings().Notifications();
-    rns.SendNotification(backgroundNotificationId.Handle(), box_value(pb), box_value(42));
-  }
+    rns.SendNotification(backgroundNotificationId.Handle(), box_value(taskName), box_value(0));
 
   deferral.Complete();
 

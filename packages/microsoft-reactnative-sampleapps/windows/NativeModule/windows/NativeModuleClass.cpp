@@ -73,13 +73,8 @@ void MODULE::Initialize(winrt::Microsoft::ReactNative::ReactContext const& react
 
     m_reactContext.Notifications().Subscribe(backgroundNotification, [this](IInspectable const& sender, ReactNotificationArgs<int> const& args)
         {
-            IReactPropertyBag res = unbox_value<IReactPropertyBag>(sender);
-            auto taskPropName = ReactPropertyBagHelper::GetName(nullptr, L"TaskNameProperty");
-            auto value = res.Get(taskPropName);
-            auto taskName = unbox_value<hstring>(value);
-            OutputDebugStringW((to_hstring(L"Background Task: ") + taskName + to_hstring("\n")).data());
-
-            m_reactContext.CallJSFunction(L"AppRegistry", L"startHeadlessTask", 1, winrt::to_string(taskName));
+            hstring taskName = unbox_value<winrt::hstring>(sender);
+            m_reactContext.CallJSFunction(L"AppRegistry", L"startHeadlessTask", 1, taskName);
 
         }); 
 }
